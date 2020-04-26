@@ -57,8 +57,6 @@ export default function App() {
 
   const randomImage = Math.floor(Math.random() * awws.length);
 
-  console.log(awws[randomImage]);
-
   // share image to friend, show when their timer is complete
 
   return (
@@ -110,11 +108,10 @@ export default function App() {
                 isLooping
                 onLoad={() => videoRef.current.presentFullscreenPlayer()}
                 ref={videoRef}
-                resizeMode="cover"
+                resizeMode="contain"
                 shouldPlay
                 source={{
-                  uri:
-                    awws[randomImage].secure_media?.reddit_video?.fallback_url,
+                  uri: awws[randomImage].secure_media?.reddit_video?.dash_url,
                 }}
                 style={{ flex: 1 }}
               />
