@@ -35,6 +35,12 @@ export default function App() {
   }, [isTimerActive]);
 
   React.useEffect(() => {
+    if (timer <= 0) {
+      setIsTimerActive(false);
+    }
+  }, [timer]);
+
+  React.useEffect(() => {
     async function getData() {
       const response = await fetch("https://www.reddit.com/r/aww/hot.json");
       const data = await response.json();
