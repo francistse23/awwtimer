@@ -7,11 +7,14 @@ import {
   View,
   Image,
 } from "react-native";
+import { Video } from "expo-av";
 
 export default function App() {
   const [awws, setAwws] = React.useState([]);
   const [timer, setTimer] = React.useState(0);
   const [isTimerActive, setIsTimerActive] = React.useState(false);
+
+  const videoRef = React.useRef(null);
 
   const calculateTimeRemaining = (time) => {
     const mins = Math.floor(time / 60);
@@ -28,7 +31,7 @@ export default function App() {
     if (isTimerActive && timer > 0) {
       runTimer = setInterval(() => {
         setTimer((timeRemaining) => timeRemaining - 1);
-      }, 10);
+      }, 1);
     }
 
     return () => clearInterval(runTimer);
@@ -45,16 +48,16 @@ export default function App() {
       const response = await fetch("https://www.reddit.com/r/aww/hot.json");
       const data = await response.json();
       const posts = data?.data?.children?.map((c) => c.data) ?? [];
-      const images = posts
-        .filter((p) => p.url.endsWith(".jpg"))
-        .map((i) => i.url);
-      setAwws(images);
+      // const images = posts.filter((p) => p.url.endsWith(".jpg"));
+      setAwws(posts);
     }
 
     getData();
   }, []);
 
   const randomImage = Math.floor(Math.random() * awws.length);
+
+  console.log(awws[randomImage]);
 
   // share image to friend, show when their timer is complete
 
@@ -93,10 +96,34 @@ export default function App() {
           </TouchableOpacity>
         </View>
       ) : (
-        <View style={{ width: "100%" }}>
-          <Image source={{ uri: awws[randomImage] }} style={{ height: 200 }} />
-          <Text>awwww</Text>
-        </View>
+        awws.length > 0 && (
+          <View style={{ width: "100%" }}>
+            {awws[randomImage].url.endsWith(".jpg") ? (
+              <Image
+                source={{
+                  uri: awws[randomImage].url,
+                }}
+                style={{ height: 200 }}
+              />
+            ) : (
+              <Video
+                isLooping
+                onLoad={() => videoRef.current.presentFullscreenPlayer()}
+                ref={videoRef}
+                resizeMode="cover"
+                shouldPlay
+                source={{
+                  uri:
+                    awws[randomImage].secure_media?.reddit_video?.fallback_url,
+                }}
+                style={{ flex: 1 }}
+              />
+            )}
+            <Text style={{ textAlign: "center" }}>
+              {awws[randomImage].title}
+            </Text>
+          </View>
+        )
       )}
     </View>
   );
