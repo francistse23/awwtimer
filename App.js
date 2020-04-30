@@ -18,20 +18,12 @@ export default function App() {
   const [isTimerActive, setIsTimerActive] = React.useState(false);
   // timer's completion status
   const [isTimerDone, setIsTimerDone] = React.useState(false);
+  const [isTimerStarted, setIsTimerStarted] = React.useState(false);
   const [timer, setTimer] = React.useState(0);
-
-  const calculateTimeRemaining = (time) => {
-    const mins = Math.floor(time / 60);
-    const seconds = time % 60;
-
-    return `${mins >= 10 ? mins : `0${mins}`}:${
-      seconds.toString().length > 1 ? seconds : `0${seconds}`
-    }`;
-  };
 
   const setTime = (time) => {
     setTimer(time * 60);
-    setIsTimerDone(false);
+    setIsTimerStarted(true);
   };
 
   React.useEffect(() => {
@@ -46,9 +38,9 @@ export default function App() {
     return () => clearInterval(runTimer);
   }, [isTimerActive]);
 
+  // !important
   React.useEffect(() => {
     if (timer <= 0) {
-      setIsModalVisible(true);
       setIsTimerActive(false);
       setIsTimerDone(true);
     }
@@ -72,42 +64,39 @@ export default function App() {
     <View style={styles.container}>
       <Text style={{ flex: 1, fontSize: 64 }}>Timer</Text>
 
-      {timer > 0 ? (
-        <View
-          style={{
-            alignItems: "center",
-            flex: 5,
-            width: "100%",
-          }}
-        >
-          <Text style={{ fontSize: 40 }}>{calculateTimeRemaining(timer)}</Text>
-          <TouchableOpacity onPress={() => setIsTimerActive((state) => !state)}>
-            <Text style={{ fontSize: 40 }}>
-              {isTimerActive ? "Pause" : "Start"}
-            </Text>
-          </TouchableOpacity>
-        </View>
+      {!isModalVisible ? (
+        <>
+          {timer <= 0 && !isTimerStarted ? (
+            <ChooseTime setTime={setTime} />
+          ) : (
+            <TimerView
+              isTimerActive={isTimerActive}
+              setTimerState={() => setIsTimerActive((state) => !state)}
+              timer={timer}
+            />
+          )}
+
+          {timer <= 0 && isTimerDone && (
+            <TouchableOpacity
+              onPress={() => {
+                setIsModalVisible(true);
+                setIsTimerStarted(false);
+              }}
+            >
+              <Text>Collect Your Prize :)</Text>
+            </TouchableOpacity>
+          )}
+        </>
       ) : (
-        <View
-          style={{ flex: 4, width: "100%", borderColor: "red", borderWidth: 1 }}
-        >
-          <TouchableOpacity onPress={() => setTime(10)} style={styles.button}>
-            <Text style={styles.buttonText}>10 minutes</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => setTime(15)} style={styles.button}>
-            <Text style={styles.buttonText}>15 minutes</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => setTime(30)} style={styles.button}>
-            <Text style={styles.buttonText}>30 minutes</Text>
-          </TouchableOpacity>
-
+        <View style={{ flex: 4, width: "100%" }}>
           {isTimerDone && awws.length > 0 && (
             <MediaModal
               awws={awws}
               isModalVisible={isModalVisible}
-              onClose={() => setIsModalVisible(false)}
+              onClose={() => {
+                setIsModalVisible(false);
+                setIsTimerDone(false);
+              }}
             />
           )}
         </View>
@@ -115,6 +104,50 @@ export default function App() {
     </View>
   );
 }
+
+const ChooseTime = ({ setTime }) => (
+  <View style={{ flex: 5 }}>
+    <TouchableOpacity onPress={() => setTime(1)} style={styles.button}>
+      <Text style={styles.buttonText}>1 minutes</Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity onPress={() => setTime(15)} style={styles.button}>
+      <Text style={styles.buttonText}>15 minutes</Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity onPress={() => setTime(30)} style={styles.button}>
+      <Text style={styles.buttonText}>30 minutes</Text>
+    </TouchableOpacity>
+  </View>
+);
+
+const TimerView = ({ isTimerActive, setTimerState, timer }) => {
+  const calculateTimeRemaining = (time) => {
+    const mins = Math.floor(time / 60);
+    const seconds = time % 60;
+
+    return `${mins >= 10 ? mins : `0${mins}`}:${
+      seconds.toString().length > 1 ? seconds : `0${seconds}`
+    }`;
+  };
+
+  return (
+    <View
+      style={{
+        alignItems: "center",
+        flex: 5,
+        width: "100%",
+      }}
+    >
+      <Text style={{ fontSize: 40 }}>{calculateTimeRemaining(timer)}</Text>
+      <TouchableOpacity onPress={setTimerState}>
+        <Text style={{ fontSize: 40 }}>
+          {isTimerActive ? "Pause" : "Start"}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
 
 const MediaModal = ({ awws, isModalVisible, onClose }) => {
   const videoRef = React.useRef(null);
@@ -131,6 +164,9 @@ const MediaModal = ({ awws, isModalVisible, onClose }) => {
         <TouchableOpacity onPress={onClose}>
           <Text style={{ fontSize: 40 }}>X</Text>
         </TouchableOpacity>
+
+        <Text style={{ textAlign: "center" }}>{awws[randomImage].title}</Text>
+
         {awws[randomImage].url.endsWith(".jpg") ? (
           <Image
             resizeMode="contain"
@@ -156,7 +192,6 @@ const MediaModal = ({ awws, isModalVisible, onClose }) => {
             useNativeControls
           />
         )}
-        <Text style={{ textAlign: "center" }}>{awws[randomImage].title}</Text>
       </View>
     </Modal>
   );
