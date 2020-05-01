@@ -113,7 +113,7 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Text style={{ flex: 1, fontSize: 64 }}>Timer</Text>
+      <Text style={{ fontSize: 64 }}>Timer</Text>
 
       {!isModalVisible ? (
         <>
@@ -131,13 +131,14 @@ export default function App() {
 
           {isTimerDone && (
             <TouchableOpacity
+              style={styles.button}
               onPress={() =>
                 dispatch({
                   type: ACTION_TYPES.COLLECT_PRIZE,
                 })
               }
             >
-              <Text>Collect Your Prize :)</Text>
+              <Text style={styles.buttonText}>Collect Your Prize :)</Text>
             </TouchableOpacity>
           )}
         </>
@@ -276,7 +277,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "white",
     flex: 1,
-    justifyContent: "center",
     paddingVertical: 12,
   },
 });
