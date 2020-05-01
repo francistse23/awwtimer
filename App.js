@@ -144,10 +144,9 @@ export default function App() {
         </>
       ) : (
         <View style={{ flex: 4, width: "100%" }}>
-          {isTimerDone && awws.length > 0 && (
+          {isTimerDone && isModalVisible && awws.length > 0 && (
             <MediaModal
               awws={awws}
-              isModalVisible={isModalVisible}
               onClose={() => dispatch({ type: ACTION_TYPES.RESET })}
             />
           )}
@@ -212,7 +211,7 @@ const TimerView = ({ isTimerActive, dispatch, timer }) => {
   );
 };
 
-const MediaModal = ({ awws, isModalVisible, onClose }) => {
+const MediaModal = ({ awws, onClose }) => {
   const videoRef = React.useRef(null);
 
   const randomImage = Math.floor(Math.random() * awws.length);
@@ -221,7 +220,7 @@ const MediaModal = ({ awws, isModalVisible, onClose }) => {
     <Modal
       statusBarTranslucent={false}
       style={{ flex: 1, width: "100%" }}
-      visible={isModalVisible}
+      visible={true}
     >
       <View>
         <TouchableOpacity onPress={onClose}>
