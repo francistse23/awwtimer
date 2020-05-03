@@ -68,6 +68,7 @@ function reducer(state, action) {
 export default function App() {
   const [timerState, dispatch] = useReducer(reducer, initialState);
   const [awws, setAwws] = React.useState([]);
+  const [prizes, setPrizes] = React.useState([]);
 
   const {
     timer,
@@ -110,10 +111,37 @@ export default function App() {
   }, []);
 
   // share image to friend, show when their timer is complete
+  React.useEffect(() => {
+    async function getPrizes() {
+      try {
+        let response = await fetch(
+          "https://awwtimer.firebaseio.com/users/arcsecond/prizes.json"
+        );
+        let prizesJson = await response.json();
+
+        const prizes = Object.entries(prizesJson).flatMap(
+          ([username, urlsObj]) => {
+            return Object.values(urlsObj).map((u) => ({
+              from: username,
+              url: u,
+            }));
+          }
+        );
+        setPrizes(prizes);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    getPrizes();
+  }, []);
 
   return (
     <View style={styles.container}>
       <Text style={{ fontSize: 64 }}>Timer</Text>
+      {prizes.length > 0 && (
+        <Text style={{ fontSize: 18 }}>{prizes.length} 🎁 waiting for u!</Text>
+      )}
 
       {!isModalVisible ? (
         <>
