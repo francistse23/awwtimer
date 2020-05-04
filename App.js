@@ -1,7 +1,9 @@
 import React, { useReducer } from "react";
 import {
+  ActivityIndicator,
   Dimensions,
   Modal,
+  Platform,
   StyleSheet,
   Text,
   TextInput,
@@ -28,6 +30,8 @@ const initialState = {
   isTimerActive: false,
   isTimerDone: false,
 };
+
+const appNamespace = "awwtimer-";
 
 function reducer(state, action) {
   switch (action.type) {
@@ -79,7 +83,8 @@ export default function App() {
   const [timerState, dispatch] = useReducer(reducer, initialState);
   const [awws, setAwws] = React.useState([]);
   const [prizes, setPrizes] = React.useState([]);
-  const [username, setUsername] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+  const [currentUser, setCurrentUser] = React.useState("");
 
   const {
     timer,
@@ -88,36 +93,6 @@ export default function App() {
     isTimerDone,
     isTimerStarted,
   } = timerState;
-
-  const createUser = async () => {
-    try {
-      const data = {
-        [username]: {
-          id: uuidv4(),
-          friends: "",
-          prizes: "",
-        },
-      };
-
-      let res = await fetch("https://awwtimer.firebaseio.com/users.json", {
-        body: JSON.stringify(data),
-        headers: {
-          "Content-Type": "application/json",
-        },
-        // dont use post or put
-        // post will create an id as a key, too chaotic
-        // put replaces all users (effectively wiping all users)
-        method: "patch",
-        mode: "cors",
-      });
-
-      let result = await res.json();
-
-      console.log(result);
-    } catch (err) {
-      throw new Error(err);
-    }
-  };
 
   React.useEffect(() => {
     let runTimer;
@@ -175,8 +150,25 @@ export default function App() {
       }
     }
 
-    getPrizes();
-  }, []);
+    async function login() {
+      const secureStoreOptions = {
+        keychainService: Platform.OS === "ios" ? "iOS" : "Android",
+      };
+
+      const username = await SecureStore.getItemAsync(
+        `${appNamespace}username`,
+        secureStoreOptions
+      );
+
+      setCurrentUser(username);
+    }
+
+    if (currentUser) {
+      getPrizes();
+    } else {
+      login();
+    }
+  }, [currentUser]);
 
   return (
     <View style={styles.container}>
@@ -186,20 +178,11 @@ export default function App() {
       )}
 
       {/* auth route? */}
-      <TextInput
-        onChangeText={(text) => setUsername(text)}
-        style={{
-          borderColor: "black",
-          borderRadius: 12,
-          borderWidth: 1,
-          padding: 8,
-          width: "60%",
-        }}
-        value={username}
-      />
-      <TouchableOpacity style={styles.button} onPress={() => createUser()}>
-        <Text style={styles.buttonText}>Create User :)</Text>
-      </TouchableOpacity>
+      {!loading && !currentUser ? (
+        <SignUpForm />
+      ) : (
+        <ActivityIndicator animating={loading} size="large" />
+      )}
 
       {!isModalVisible ? (
         <>
@@ -345,6 +328,86 @@ const MediaModal = ({ awws, onClose }) => {
   );
 };
 
+const SignUpForm = () => {
+  const [password, setPassword] = React.useState("");
+  const [username, setUsername] = React.useState("");
+
+  const createUser = async () => {
+    try {
+      const data = {
+        [username]: {
+          id: uuidv4(),
+          friends: "",
+          prizes: "",
+        },
+      };
+
+      let res = await fetch("https://awwtimer.firebaseio.com/users.json", {
+        body: JSON.stringify(data),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        // dont use post or put
+        // post will create an id as a key, too chaotic
+        // put replaces all users (effectively wiping all users)
+        method: "patch",
+        mode: "cors",
+      });
+
+      await res.json();
+
+      storeCredentials(username, password);
+      setCurrentUser(username);
+      setLoading(false);
+    } catch (err) {
+      throw new Error(err);
+    }
+  };
+
+  const storeCredentials = async (username, password) => {
+    const secureStoreOptions = {
+      keychainService: Platform.OS === "ios" ? "iOS" : "Android",
+    };
+    await SecureStore.setItemAsync(
+      `${appNamespace}username`,
+      username,
+      secureStoreOptions
+    );
+    await SecureStore.setItemAsync(
+      `${appNamespace}password`,
+      password,
+      secureStoreOptions
+    );
+  };
+
+  return (
+    <>
+      <TextInput
+        onChangeText={(text) => setUsername(text)}
+        placeholder="username"
+        style={styles.input}
+        value={username}
+      />
+      <TextInput
+        onChangeText={(text) => setPassword(text)}
+        placeholder="password"
+        secureTextEntry
+        style={styles.input}
+        value={password}
+      />
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => {
+          setLoading(true);
+          createUser();
+        }}
+      >
+        <Text style={styles.buttonText}>Create User :)</Text>
+      </TouchableOpacity>
+    </>
+  );
+};
+
 const styles = StyleSheet.create({
   button: {
     backgroundColor: "blue",
@@ -362,5 +425,13 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     flex: 1,
     paddingVertical: 12,
+  },
+  input: {
+    borderColor: "black",
+    borderRadius: 12,
+    borderWidth: 1,
+    margin: 8,
+    padding: 8,
+    width: "60%",
   },
 });
