@@ -10,6 +10,7 @@ import {
   Image,
 } from "react-native";
 import { Video } from "expo-av";
+import * as SecureStore from "expo-secure-store";
 
 const ACTION_TYPES = {
   RESET: "RESET",
@@ -93,20 +94,26 @@ export default function App() {
       const data = {
         [username]: {
           id: uuidv4(),
-          friends: [],
-          prizes: [],
+          friends: "",
+          prizes: "",
         },
       };
 
-      let res = await fetch("https://awwtimer.firebaseio.com/users/", {
-        method: "POST",
+      let res = await fetch("https://awwtimer.firebaseio.com/users.json", {
         body: JSON.stringify(data),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        // dont use post or put
+        // post will create an id as a key, too chaotic
+        // put replaces all users (effectively wiping all users)
+        method: "patch",
         mode: "cors",
       });
 
-      res = await res.json();
+      let result = await res.json();
 
-      console.log(res);
+      console.log(result);
     } catch (err) {
       throw new Error(err);
     }
@@ -149,8 +156,9 @@ export default function App() {
     async function getPrizes() {
       try {
         let response = await fetch(
-          "https://awwtimer.firebaseio.com/users/arcsecond/prizes.json"
+          `https://awwtimer.firebaseio.com/users/${currentUser}/prizes.json`
         );
+
         let prizesJson = await response.json();
 
         const prizes = Object.entries(prizesJson).flatMap(
@@ -177,6 +185,7 @@ export default function App() {
         <Text style={{ fontSize: 18 }}>{prizes.length} 🎁 waiting for u!</Text>
       )}
 
+      {/* auth route? */}
       <TextInput
         onChangeText={(text) => setUsername(text)}
         style={{
