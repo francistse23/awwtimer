@@ -4,6 +4,7 @@ import {
   Modal,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
   Image,
@@ -65,10 +66,19 @@ function reducer(state, action) {
   }
 }
 
+function uuidv4() {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+    var r = (Math.random() * 16) | 0,
+      v = c == "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 export default function App() {
   const [timerState, dispatch] = useReducer(reducer, initialState);
   const [awws, setAwws] = React.useState([]);
   const [prizes, setPrizes] = React.useState([]);
+  const [username, setUsername] = React.useState("");
 
   const {
     timer,
@@ -77,6 +87,30 @@ export default function App() {
     isTimerDone,
     isTimerStarted,
   } = timerState;
+
+  const createUser = async () => {
+    try {
+      const data = {
+        [username]: {
+          id: uuidv4(),
+          friends: [],
+          prizes: [],
+        },
+      };
+
+      let res = await fetch("https://awwtimer.firebaseio.com/users/", {
+        method: "POST",
+        body: JSON.stringify(data),
+        mode: "cors",
+      });
+
+      res = await res.json();
+
+      console.log(res);
+    } catch (err) {
+      throw new Error(err);
+    }
+  };
 
   React.useEffect(() => {
     let runTimer;
@@ -142,6 +176,21 @@ export default function App() {
       {prizes.length > 0 && (
         <Text style={{ fontSize: 18 }}>{prizes.length} 🎁 waiting for u!</Text>
       )}
+
+      <TextInput
+        onChangeText={(text) => setUsername(text)}
+        style={{
+          borderColor: "black",
+          borderRadius: 12,
+          borderWidth: 1,
+          padding: 8,
+          width: "60%",
+        }}
+        value={username}
+      />
+      <TouchableOpacity style={styles.button} onPress={() => createUser()}>
+        <Text style={styles.buttonText}>Create User :)</Text>
+      </TouchableOpacity>
 
       {!isModalVisible ? (
         <>
