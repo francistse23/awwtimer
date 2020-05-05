@@ -324,8 +324,6 @@ const MediaModal = ({ aww, friends, onClose }) => {
           // },
         ];
 
-        console.log(data);
-
         let res = await fetch(
           `https://awwtimer.firebaseio.com/users/${friend}/prizes.json`,
           {
@@ -340,8 +338,8 @@ const MediaModal = ({ aww, friends, onClose }) => {
             mode: "cors",
           }
         );
-        res = await res.json();
-        console.log("After sharing", res);
+        // res = await res.json();
+        // console.log("After sharing", res);
       }
     } catch (err) {
       throw new Error(err);
@@ -523,6 +521,8 @@ const FriendsList = ({
       setSelectedFriends((selectedFriends) => [...selectedFriends, friend]);
     }
   };
+
+  console.log(friends);
 
   return (
     <>
