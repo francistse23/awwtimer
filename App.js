@@ -238,10 +238,9 @@ export default function App() {
         <View style={{ flex: 4, width: "100%" }}>
           {isTimerDone && isModalVisible && awws.length > 0 && (
             <MediaModal
-              awws={awws}
+              aww={awws[randomImage]}
               friends={currentUser.friends}
               onClose={() => dispatch({ type: ACTION_TYPES.RESET })}
-              randomImage={randomImage}
             />
           )}
         </View>
@@ -305,9 +304,49 @@ const TimerView = ({ isTimerActive, dispatch, timer }) => {
   );
 };
 
-const MediaModal = ({ awws, friends, onClose, randomImage }) => {
+const MediaModal = ({ aww, friends, onClose }) => {
   const [isSharing, setIsSharing] = React.useState(false);
+  const [selectedFriends, setSelectedFriends] = React.useState([]);
   const videoRef = React.useRef(null);
+
+  // moved randomImage out because tapping button causes rerender
+
+  const shareToFriends = async () => {
+    try {
+      for (let friend of selectedFriends) {
+        const data = [
+          aww.is_video ? aww.secure_media?.reddit_video?.dash_url : aww.url,
+          // following structure will throw an error
+          // {
+          //   [aww.id]: aww.is_video
+          //     ? aww.secure_media?.reddit_video?.dash_url
+          //     : aww.url,
+          // },
+        ];
+
+        console.log(data);
+
+        let res = await fetch(
+          `https://awwtimer.firebaseio.com/users/${friend}/prizes.json`,
+          {
+            body: JSON.stringify(data),
+            headers: {
+              "Content-Type": "application/json",
+            },
+            // dont use post or put
+            // post, firebase will auto-generate a key/id and use that as the new user object's key, too chaotic
+            // put, replaces all users (effectively wiping all users)
+            method: "patch",
+            mode: "cors",
+          }
+        );
+        res = await res.json();
+        console.log("After sharing", res);
+      }
+    } catch (err) {
+      throw new Error(err);
+    }
+  };
 
   return (
     <Modal
@@ -323,13 +362,13 @@ const MediaModal = ({ awws, friends, onClose, randomImage }) => {
           <Text style={{ fontSize: 30 }}>X</Text>
         </TouchableOpacity>
 
-        <Text style={{ textAlign: "center" }}>{awws[randomImage].title}</Text>
+        <Text style={{ textAlign: "center" }}>{aww.title}</Text>
 
-        {awws[randomImage].url.endsWith(".jpg") ? (
+        {aww.url.endsWith(".jpg") ? (
           <Image
             resizeMode="contain"
             source={{
-              uri: awws[randomImage].url,
+              uri: aww.url,
             }}
             style={{
               width: Dimensions.get("window").width * 0.7,
@@ -346,7 +385,7 @@ const MediaModal = ({ awws, friends, onClose, randomImage }) => {
               resizeMode="contain"
               shouldPlay
               source={{
-                uri: awws[randomImage].secure_media?.reddit_video?.dash_url,
+                uri: aww.secure_media?.reddit_video?.dash_url,
               }}
               style={{ flex: 1 }}
               useNativeControls
@@ -355,7 +394,12 @@ const MediaModal = ({ awws, friends, onClose, randomImage }) => {
         )}
 
         {isSharing ? (
-          <FriendsList friends={friends} />
+          <FriendsList
+            selectedFriends={selectedFriends}
+            setSelectedFriends={setSelectedFriends}
+            friends={friends}
+            shareToFriends={shareToFriends}
+          />
         ) : (
           <TouchableOpacity
             onPress={() => setIsSharing(true)}
@@ -463,9 +507,12 @@ const SignUpForm = ({ setLoading, setCurrentUser }) => {
   );
 };
 
-const FriendsList = ({ friends }) => {
-  const [selectedFriends, setSelectedFriends] = React.useState([]);
-
+const FriendsList = ({
+  friends,
+  selectedFriends,
+  setSelectedFriends,
+  shareToFriends,
+}) => {
   const addFriend = (friend) => {
     if (selectedFriends.includes(friend)) {
       let temp = [...selectedFriends];
@@ -504,7 +551,12 @@ const FriendsList = ({ friends }) => {
         />
         <TouchableOpacity
           disabled={selectedFriends.length < 1}
-          style={styles.button}
+          onPress={() => shareToFriends()}
+          style={
+            selectedFriends.length < 1
+              ? { ...styles.button, backgroundColor: "lightgray" }
+              : styles.button
+          }
         >
           <Text style={styles.buttonText}>Share</Text>
         </TouchableOpacity>
