@@ -153,7 +153,7 @@ export default function App() {
     //   }
     // }
 
-    async function login() {
+    async function login(username = "furanki", password = "") {
       try {
         const secureStoreOptions = {
           keychainService: Platform.OS === "ios" ? "iOS" : "Android",
@@ -179,7 +179,7 @@ export default function App() {
     if (currentUser.username) {
       // getPrizes();
     } else {
-      // login();
+      login();
     }
   }, [currentUser]);
 
@@ -188,18 +188,25 @@ export default function App() {
       <Text style={{ fontSize: 64 }}>Timer</Text>
 
       {/* auth route? */}
-      {!loading && !currentUser ? (
-        <SignUpForm setLoading={setLoading} setCurrentUser={setCurrentUser} />
-      ) : (
-        <ActivityIndicator animating={loading} size="large" />
-      )}
-
-      {prizes?.length > 0 && (
-        <Text style={{ fontSize: 18 }}>{prizes.length} 🎁 waiting for u!</Text>
-      )}
-
-      {!isModalVisible ? (
+      {!currentUser ? (
         <>
+          {!loading ? (
+            <SignUpForm
+              setLoading={setLoading}
+              setCurrentUser={setCurrentUser}
+            />
+          ) : (
+            <ActivityIndicator animating={loading} size="large" />
+          )}
+        </>
+      ) : !isModalVisible ? (
+        <>
+          {prizes?.length > 0 && (
+            <Text style={{ fontSize: 18 }}>
+              {prizes.length} 🎁 waiting for u!
+            </Text>
+          )}
+
           {!isTimerStarted && !isTimerDone && (
             <ChooseTime dispatch={dispatch} />
           )}
@@ -295,6 +302,7 @@ const TimerView = ({ isTimerActive, dispatch, timer }) => {
 };
 
 const MediaModal = ({ awws, onClose }) => {
+  const [isSharing, setIsSharing] = React.useState(false);
   const videoRef = React.useRef(null);
 
   const randomImage = Math.floor(Math.random() * awws.length);
@@ -329,12 +337,6 @@ const MediaModal = ({ awws, onClose }) => {
         ) : (
           <>
             {/* poster image ? */}
-            {/* <Image
-              source={{
-                uri: awws[randomImage].preview?.images[0]?.resolutions[1],
-              }}
-              style={{ height: 121, width: 216 }}
-            /> */}
             <Video
               isLooping
               onLoad={() => videoRef.current.presentFullscreenPlayer()}
@@ -352,7 +354,9 @@ const MediaModal = ({ awws, onClose }) => {
         <TouchableOpacity
           style={{ backgroundColor: "lightblue", borderRadius: 8, padding: 16 }}
         >
-          <Text style={{ color: "white" }}>Share ( because you care :) )</Text>
+          <Text style={{ color: "white", fontSize: 18 }}>
+            Share ( because you care :) )
+          </Text>
         </TouchableOpacity>
       </View>
     </Modal>
@@ -369,6 +373,9 @@ const SignUpForm = ({ setLoading, setCurrentUser }) => {
         [username]: {
           id: uuidv4(),
           friends:
+            // auto adding each other as friends, because... why not?
+            // also auto adding us as friends to all new users
+            // we want to see some of those aww posts too
             username === "furanki"
               ? [{ arcsecond: "a2941f0a-9cd0-4bb9-8532-df3b49981a82" }]
               : username === "arcsecond"
