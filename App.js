@@ -97,6 +97,8 @@ export default function App() {
 
   const { prizes } = currentUser;
 
+  const randomImage = Math.floor(Math.random() * awws.length);
+
   React.useEffect(() => {
     let runTimer;
 
@@ -237,7 +239,9 @@ export default function App() {
           {isTimerDone && isModalVisible && awws.length > 0 && (
             <MediaModal
               awws={awws}
+              friends={currentUser.friends}
               onClose={() => dispatch({ type: ACTION_TYPES.RESET })}
+              randomImage={randomImage}
             />
           )}
         </View>
@@ -301,11 +305,9 @@ const TimerView = ({ isTimerActive, dispatch, timer }) => {
   );
 };
 
-const MediaModal = ({ awws, onClose }) => {
+const MediaModal = ({ awws, friends, onClose, randomImage }) => {
   const [isSharing, setIsSharing] = React.useState(false);
   const videoRef = React.useRef(null);
-
-  const randomImage = Math.floor(Math.random() * awws.length);
 
   return (
     <Modal
@@ -351,13 +353,19 @@ const MediaModal = ({ awws, onClose }) => {
             />
           </>
         )}
-        <TouchableOpacity
-          style={{ backgroundColor: "lightblue", borderRadius: 8, padding: 16 }}
-        >
-          <Text style={{ color: "white", fontSize: 18 }}>
-            Share ( because you care :) )
-          </Text>
-        </TouchableOpacity>
+
+        {isSharing ? (
+          <FriendsList friends={friends} />
+        ) : (
+          <TouchableOpacity
+            onPress={() => setIsSharing(true)}
+            style={styles.button}
+          >
+            <Text style={{ color: "white", fontSize: 18 }}>
+              Share ( because you care :) )
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
     </Modal>
   );
@@ -455,18 +463,59 @@ const SignUpForm = ({ setLoading, setCurrentUser }) => {
   );
 };
 
-// const FriendsList = ({ friends }) => {
+const FriendsList = ({ friends }) => {
+  const [selectedFriends, setSelectedFriends] = React.useState([]);
 
-//   return (
-//     <FlatList
-//       data={friends}
-//     />
-//   )
-// }
+  const addFriend = (friend) => {
+    if (selectedFriends.includes(friend)) {
+      let temp = [...selectedFriends];
+      temp.splice(selectedFriends.indexOf(friend), 1);
+
+      setSelectedFriends(temp);
+    } else {
+      setSelectedFriends((selectedFriends) => [...selectedFriends, friend]);
+    }
+  };
+
+  return (
+    <>
+      <Text>Your friends 😀</Text>
+      <View style={{ flexDirection: "row" }}>
+        <FlatList
+          data={friends}
+          horizontal
+          keyExtractor={(item) => Object.keys(item)[0]}
+          renderItem={({ item }) => {
+            const [friendName] = Object.keys(item);
+
+            return (
+              <TouchableOpacity
+                onPress={() => addFriend(friendName)}
+                style={
+                  selectedFriends.includes(friendName)
+                    ? styles.button
+                    : { ...styles.button, backgroundColor: "lightgray" }
+                }
+              >
+                <Text style={styles.buttonText}>{friendName}</Text>
+              </TouchableOpacity>
+            );
+          }}
+        />
+        <TouchableOpacity
+          disabled={selectedFriends.length < 1}
+          style={styles.button}
+        >
+          <Text style={styles.buttonText}>Share</Text>
+        </TouchableOpacity>
+      </View>
+    </>
+  );
+};
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: "blue",
+    backgroundColor: "royalblue",
     borderRadius: 10,
     padding: 12,
     margin: 12,
