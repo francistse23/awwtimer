@@ -96,8 +96,6 @@ export default function App() {
 
   const { prizes } = currentUser;
 
-  console.log(currentUser);
-
   React.useEffect(() => {
     let runTimer;
 
@@ -352,8 +350,8 @@ const SignUpForm = ({ setLoading, setCurrentUser }) => {
       const data = {
         [username]: {
           id: uuidv4(),
-          friends: "",
-          prizes: "",
+          friends: { dateCreated: new Date() },
+          prizes: { dateCreated: new Date() },
         },
       };
 
