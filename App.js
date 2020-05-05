@@ -166,7 +166,7 @@ export default function App() {
     if (currentUser) {
       getPrizes();
     } else {
-      login();
+      // login();
     }
   }, [currentUser]);
 
@@ -179,7 +179,7 @@ export default function App() {
 
       {/* auth route? */}
       {!loading && !currentUser ? (
-        <SignUpForm />
+        <SignUpForm setLoading={setLoading} setCurrentUser={setCurrentUser} />
       ) : (
         <ActivityIndicator animating={loading} size="large" />
       )}
@@ -328,7 +328,7 @@ const MediaModal = ({ awws, onClose }) => {
   );
 };
 
-const SignUpForm = () => {
+const SignUpForm = ({ setLoading, setCurrentUser }) => {
   const [password, setPassword] = React.useState("");
   const [username, setUsername] = React.useState("");
 
