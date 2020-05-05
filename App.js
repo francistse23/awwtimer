@@ -82,7 +82,7 @@ function uuidv4() {
 export default function App() {
   const [timerState, dispatch] = useReducer(reducer, initialState);
   const [awws, setAwws] = React.useState([]);
-  const [prizes, setPrizes] = React.useState([]);
+  // const [prizes, setPrizes] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
   const [currentUser, setCurrentUser] = React.useState("");
 
@@ -93,6 +93,10 @@ export default function App() {
     isTimerDone,
     isTimerStarted,
   } = timerState;
+
+  const { prizes } = currentUser;
+
+  console.log(currentUser);
 
   React.useEffect(() => {
     let runTimer;
@@ -128,60 +132,71 @@ export default function App() {
 
   // share image to friend, show when their timer is complete
   React.useEffect(() => {
-    async function getPrizes() {
+    // async function getPrizes() {
+    //   try {
+    //     let response = await fetch(
+    //       `https://awwtimer.firebaseio.com/users/${currentUser}/prizes.json`
+    //     );
+
+    //     let prizesJson = await response.json();
+
+    //     const prizes = Object.entries(prizesJson).flatMap(
+    //       ([username, urlsObj]) => {
+    //         return Object.values(urlsObj).map((u) => ({
+    //           from: username,
+    //           url: u,
+    //         }));
+    //       }
+    //     );
+    //     setPrizes(prizes);
+    //   } catch (error) {
+    //     console.error(error);
+    //   }
+    // }
+
+    async function login() {
       try {
+        const secureStoreOptions = {
+          keychainService: Platform.OS === "ios" ? "iOS" : "Android",
+        };
+
+        const username = await SecureStore.getItemAsync(
+          `${appNamespace}username`,
+          secureStoreOptions
+        );
+
         let response = await fetch(
-          `https://awwtimer.firebaseio.com/users/${currentUser}/prizes.json`
+          `https://awwtimer.firebaseio.com/users/${username}.json`
         );
 
-        let prizesJson = await response.json();
+        response = await response.json();
 
-        const prizes = Object.entries(prizesJson).flatMap(
-          ([username, urlsObj]) => {
-            return Object.values(urlsObj).map((u) => ({
-              from: username,
-              url: u,
-            }));
-          }
-        );
-        setPrizes(prizes);
-      } catch (error) {
-        console.error(error);
+        setCurrentUser({ username, ...response });
+      } catch (err) {
+        throw new Error(err);
       }
     }
 
-    async function login() {
-      const secureStoreOptions = {
-        keychainService: Platform.OS === "ios" ? "iOS" : "Android",
-      };
-
-      const username = await SecureStore.getItemAsync(
-        `${appNamespace}username`,
-        secureStoreOptions
-      );
-
-      setCurrentUser(username);
-    }
-
-    if (currentUser) {
-      getPrizes();
+    if (currentUser.username) {
+      // getPrizes();
     } else {
-      // login();
+      login();
     }
   }, [currentUser]);
 
   return (
     <View style={styles.container}>
       <Text style={{ fontSize: 64 }}>Timer</Text>
-      {prizes.length > 0 && (
-        <Text style={{ fontSize: 18 }}>{prizes.length} 🎁 waiting for u!</Text>
-      )}
 
       {/* auth route? */}
       {!loading && !currentUser ? (
         <SignUpForm setLoading={setLoading} setCurrentUser={setCurrentUser} />
       ) : (
         <ActivityIndicator animating={loading} size="large" />
+      )}
+
+      {prizes?.length > 0 && (
+        <Text style={{ fontSize: 18 }}>{prizes.length} 🎁 waiting for u!</Text>
       )}
 
       {!isModalVisible ? (
@@ -348,22 +363,23 @@ const SignUpForm = ({ setLoading, setCurrentUser }) => {
           "Content-Type": "application/json",
         },
         // dont use post or put
-        // post will create an id as a key, too chaotic
-        // put replaces all users (effectively wiping all users)
+        // post, firebase will auto-generate a key/id and use that as the new user object's key, too chaotic
+        // put, replaces all users (effectively wiping all users)
         method: "patch",
         mode: "cors",
       });
 
-      await res.json();
+      res = await res.json();
 
       storeCredentials(username, password);
-      setCurrentUser(username);
+      setCurrentUser({ username, ...res });
       setLoading(false);
     } catch (err) {
       throw new Error(err);
     }
   };
 
+  // stores user credentials to the platform's secure keychain
   const storeCredentials = async (username, password) => {
     const secureStoreOptions = {
       keychainService: Platform.OS === "ios" ? "iOS" : "Android",
