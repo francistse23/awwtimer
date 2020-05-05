@@ -2,6 +2,7 @@ import React, { useReducer } from "react";
 import {
   ActivityIndicator,
   Dimensions,
+  FlatList,
   Modal,
   Platform,
   StyleSheet,
@@ -178,7 +179,7 @@ export default function App() {
     if (currentUser.username) {
       // getPrizes();
     } else {
-      login();
+      // login();
     }
   }, [currentUser]);
 
@@ -304,9 +305,12 @@ const MediaModal = ({ awws, onClose }) => {
       style={{ flex: 1, width: "100%" }}
       visible={true}
     >
-      <View>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={{ fontSize: 40 }}>X</Text>
+      <View style={{ alignItems: "center", flex: 1, paddingVertical: 8 }}>
+        <TouchableOpacity
+          onPress={onClose}
+          style={{ alignSelf: "flex-start", margin: 8 }}
+        >
+          <Text style={{ fontSize: 30 }}>X</Text>
         </TouchableOpacity>
 
         <Text style={{ textAlign: "center" }}>{awws[randomImage].title}</Text>
@@ -318,24 +322,38 @@ const MediaModal = ({ awws, onClose }) => {
               uri: awws[randomImage].url,
             }}
             style={{
-              width: Dimensions.get("window").width,
-              height: Dimensions.get("window").height,
+              width: Dimensions.get("window").width * 0.7,
+              height: Dimensions.get("window").height * 0.7,
             }}
           />
         ) : (
-          <Video
-            isLooping
-            onLoad={() => videoRef.current.presentFullscreenPlayer()}
-            ref={videoRef}
-            resizeMode="contain"
-            shouldPlay
-            source={{
-              uri: awws[randomImage].secure_media?.reddit_video?.dash_url,
-            }}
-            style={{ flex: 1 }}
-            useNativeControls
-          />
+          <>
+            {/* poster image ? */}
+            {/* <Image
+              source={{
+                uri: awws[randomImage].preview?.images[0]?.resolutions[1],
+              }}
+              style={{ height: 121, width: 216 }}
+            /> */}
+            <Video
+              isLooping
+              onLoad={() => videoRef.current.presentFullscreenPlayer()}
+              ref={videoRef}
+              resizeMode="contain"
+              shouldPlay
+              source={{
+                uri: awws[randomImage].secure_media?.reddit_video?.dash_url,
+              }}
+              style={{ flex: 1 }}
+              useNativeControls
+            />
+          </>
         )}
+        <TouchableOpacity
+          style={{ backgroundColor: "lightblue", borderRadius: 8, padding: 16 }}
+        >
+          <Text style={{ color: "white" }}>Share ( because you care :) )</Text>
+        </TouchableOpacity>
       </View>
     </Modal>
   );
@@ -350,8 +368,16 @@ const SignUpForm = ({ setLoading, setCurrentUser }) => {
       const data = {
         [username]: {
           id: uuidv4(),
-          friends: { dateCreated: new Date() },
-          prizes: { dateCreated: new Date() },
+          friends:
+            username === "furanki"
+              ? [{ arcsecond: "a2941f0a-9cd0-4bb9-8532-df3b49981a82" }]
+              : username === "arcsecond"
+              ? [{ furanki: "9d8f6d67-2b50-4b09-8234-38ed0ca8e2e2" }]
+              : [
+                  { arcsecond: "a2941f0a-9cd0-4bb9-8532-df3b49981a82" },
+                  { furanki: "9d8f6d67-2b50-4b09-8234-38ed0ca8e2e2" },
+                ],
+          prizes: [0],
         },
       };
 
@@ -421,6 +447,15 @@ const SignUpForm = ({ setLoading, setCurrentUser }) => {
     </>
   );
 };
+
+// const FriendsList = ({ friends }) => {
+
+//   return (
+//     <FlatList
+//       data={friends}
+//     />
+//   )
+// }
 
 const styles = StyleSheet.create({
   button: {
