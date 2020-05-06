@@ -73,14 +73,6 @@ function reducer(state, action) {
   }
 }
 
-function uuidv4() {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-    var r = (Math.random() * 16) | 0,
-      v = c == "x" ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}
-
 export default function App() {
   const [timerState, dispatch] = useReducer(reducer, initialState);
   const [awws, setAwws] = React.useState([]);
@@ -302,98 +294,6 @@ const TimerView = ({ isTimerActive, dispatch, timer }) => {
         </Text>
       </TouchableOpacity>
     </View>
-  );
-};
-
-const SignUpForm = ({ setLoading, setCurrentUser }) => {
-  const [password, setPassword] = React.useState("");
-  const [username, setUsername] = React.useState("");
-
-  const createUser = async () => {
-    try {
-      const data = {
-        [username]: {
-          id: uuidv4(),
-          friends:
-            // auto adding each other as friends, because... why not?
-            // also auto adding us as friends to all new users
-            // we want to see some of those aww posts too
-            username === "furanki"
-              ? [{ arcsecond: "a2941f0a-9cd0-4bb9-8532-df3b49981a82" }]
-              : username === "arcsecond"
-              ? [{ furanki: "9d8f6d67-2b50-4b09-8234-38ed0ca8e2e2" }]
-              : [
-                  { arcsecond: "a2941f0a-9cd0-4bb9-8532-df3b49981a82" },
-                  { furanki: "9d8f6d67-2b50-4b09-8234-38ed0ca8e2e2" },
-                ],
-          prizes: [0],
-        },
-      };
-
-      let res = await fetch("https://awwtimer.firebaseio.com/users.json", {
-        body: JSON.stringify(data),
-        headers: {
-          "Content-Type": "application/json",
-        },
-        // dont use post or put
-        // post, firebase will auto-generate a key/id and use that as the new user object's key, too chaotic
-        // put, replaces all users (effectively wiping all users)
-        method: "patch",
-        mode: "cors",
-      });
-
-      res = await res.json();
-
-      storeCredentials(username, password);
-      setCurrentUser({ username, ...res });
-      setLoading(false);
-    } catch (err) {
-      throw new Error(err);
-    }
-  };
-
-  // stores user credentials to the platform's secure keychain
-  const storeCredentials = async (username, password) => {
-    const secureStoreOptions = {
-      keychainService: Platform.OS === "ios" ? "iOS" : "Android",
-    };
-    await SecureStore.setItemAsync(
-      `${appNamespace}username`,
-      username,
-      secureStoreOptions
-    );
-    await SecureStore.setItemAsync(
-      `${appNamespace}password`,
-      password,
-      secureStoreOptions
-    );
-  };
-
-  return (
-    <>
-      <TextInput
-        onChangeText={(text) => setUsername(text)}
-        placeholder="username"
-        style={styles.input}
-        value={username}
-      />
-      <TextInput
-        onChangeText={(text) => setPassword(text)}
-        placeholder="password"
-        secureTextEntry
-        style={styles.input}
-        value={password}
-      />
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => {
-          setLoading(true);
-          createUser();
-        }}
-      >
-        <Text style={styles.buttonText}>Create User :)</Text>
-      </TouchableOpacity>
-    </>
   );
 };
 
