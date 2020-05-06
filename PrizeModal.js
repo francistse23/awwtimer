@@ -1,13 +1,41 @@
 import React from "react";
-import FriendsList from "./FriendsList";
-import { Share, StyleSheet } from "react-native";
+import {
+  Dimensions,
+  Image,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { Video } from "expo-av";
 
-export default function PrizeModal({ aww, friends, onClose, ShareBtn }) {
-  const [isSharing, setIsSharing] = React.useState(false);
-  const [selectedFriends, setSelectedFriends] = React.useState([]);
+// async function getPrizes() {
+//   try {
+//     let response = await fetch(
+//       `https://awwtimer.firebaseio.com/users/${currentUser}/prizes.json`
+//     );
+
+//     let prizesJson = await response.json();
+
+//     const prizes = Object.entries(prizesJson).flatMap(
+//       ([username, urlsObj]) => {
+//         return Object.values(urlsObj).map((u) => ({
+//           from: username,
+//           url: u,
+//         }));
+//       }
+//     );
+//     setPrizes(prizes);
+//   } catch (error) {
+//     console.error(error);
+//   }
+// }
+
+export default function PrizeModal({ aww, onClose, ShareBtn }) {
   const videoRef = React.useRef(null);
 
-  // moved randomImage out because tapping button causes rerender
+  if (!aww) return <Text style={{ textAlign: "center" }}>💩</Text>;
 
   const shareToFriends = async () => {
     try {
@@ -58,38 +86,53 @@ export default function PrizeModal({ aww, friends, onClose, ShareBtn }) {
           <Text style={{ fontSize: 30 }}>X</Text>
         </TouchableOpacity>
 
-        <Text style={{ textAlign: "center" }}>{aww.title}</Text>
+        <>
+          <Text style={{ textAlign: "center" }}>{aww.title}</Text>
 
-        {aww.url.endsWith(".jpg") ? (
-          <Image
-            resizeMode="contain"
-            source={{
-              uri: aww.url,
-            }}
-            style={{
-              width: Dimensions.get("window").width * 0.7,
-              height: Dimensions.get("window").height * 0.7,
-            }}
-          />
-        ) : (
-          <>
-            {/* poster image ? */}
-            <Video
-              isLooping
-              onLoad={() => videoRef.current.presentFullscreenPlayer()}
-              ref={videoRef}
+          {aww.url.endsWith(".jpg") && (
+            <Image
               resizeMode="contain"
-              shouldPlay
               source={{
-                uri: aww.secure_media?.reddit_video?.dash_url,
+                uri: aww.url,
               }}
-              style={{ flex: 1 }}
-              useNativeControls
+              style={{
+                width: Dimensions.get("window").width * 0.7,
+                height: Dimensions.get("window").height * 0.7,
+              }}
             />
-          </>
-        )}
+          )}
 
-        <ShareBtn />
+          {aww.secure_media.oembed && (
+            <Image
+              resizeMode="contain"
+              source={{
+                uri: aww.secure_media.oembed.thumbnail_url,
+              }}
+              style={{
+                width: Dimensions.get("window").width * 0.7,
+                height: Dimensions.get("window").height * 0.7,
+              }}
+            />
+          )}
+
+          {!aww.url.endsWith(".jpg") && (
+            <>
+              <Video
+                isLooping
+                onLoad={() => videoRef.current.presentFullscreenPlayer()}
+                ref={videoRef}
+                resizeMode="contain"
+                shouldPlay
+                source={{
+                  uri: aww.secure_media?.reddit_video?.fallback_url,
+                }}
+                style={{ flex: 1 }}
+                useNativeControls
+              />
+            </>
+          )}
+          <ShareBtn />
+        </>
       </View>
     </Modal>
   );
