@@ -1,5 +1,12 @@
 import React from "react";
-import { Platform, StyleSheet, Text, TextInput, TouchableOpacity } from "react-native";
+import {
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+} from "react-native";
+import * as SecureStore from "expo-secure-store";
 
 // function uuidv4() {
 //     return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
@@ -9,26 +16,27 @@ import { Platform, StyleSheet, Text, TextInput, TouchableOpacity } from "react-n
 //     });
 //   }
 
-function generateCode(){
-    let code = "", random = "0123456789";
+function generateCode() {
+  let code = "",
+    random = "0123456789";
 
-    while (code.length < 4) {
-        code += random[Math.floor(Math.random() * 11))]
-    }
+  while (code.length < 4) {
+    code += random[Math.floor(Math.random() * 10)];
+  }
 
-    console.log("code generated:", code)
-
-    return code;
+  return code;
 }
 
-export default function SignUpForm({ setLoading, setCurrentUser }) {
+export default function SignUpForm({ onUserCreated }) {
   const [username, setUsername] = React.useState("");
+  //   const [loading, setLoading] = React.useState(false);
   const appNamespace = "awwtimer-";
 
   const createUser = async () => {
     try {
+      const code = generateCode();
       const data = {
-        [username]: true,
+        [username]: code,
       };
 
       let res = await fetch("https://awwtimer.firebaseio.com/users.json", {
@@ -45,24 +53,22 @@ export default function SignUpForm({ setLoading, setCurrentUser }) {
 
       res = await res.json();
 
-      storeCredentials(username);
+      storeCredentials(username, code);
 
-      setCurrentUser(username);
-
-      setLoading(false);
+      onUserCreated(`${username}#${code}`);
     } catch (err) {
       throw new Error(err);
     }
   };
 
   // stores user credentials to the platform's secure keychain
-  const storeCredentials = async (username) => {
+  const storeCredentials = async (username, code) => {
     const secureStoreOptions = {
       keychainService: Platform.OS === "ios" ? "iOS" : "Android",
     };
     await SecureStore.setItemAsync(
       `${appNamespace}username`,
-      username,
+      `${username}#${code}`,
       secureStoreOptions
     );
   };
@@ -78,7 +84,6 @@ export default function SignUpForm({ setLoading, setCurrentUser }) {
       <TouchableOpacity
         style={styles.button}
         onPress={() => {
-          setLoading(true);
           createUser();
         }}
       >

@@ -26,6 +26,7 @@ const ACTION_TYPES = {
   TIMER_DONE: "TIMER_DONE",
   COLLECT_PRIZE: "COLLECT_PRIZE",
   SHARE_PRIZE: "SHARE_PRIZE",
+  CREATE_USER: "CREATE_USER",
 };
 
 const initialState = {
@@ -35,6 +36,7 @@ const initialState = {
   isTimerActive: false,
   isTimerDone: false,
   isSharing: false,
+  isCreatingUser: false,
 };
 
 const appNamespace = "awwtimer-";
@@ -77,6 +79,11 @@ function reducer(state, action) {
         isSharing: true,
         isModalVisible: false,
       };
+    case ACTION_TYPES.CREATE_USER:
+      return {
+        ...initialState,
+        isCreatingUser: true,
+      };
     default:
       throw new Error("get to work");
   }
@@ -84,9 +91,35 @@ function reducer(state, action) {
 
 export default function App() {
   const [timerState, dispatch] = useReducer(reducer, initialState);
-  const [currentUser, setCurrentUser] = useState("");
+  const [currentUser, setCurrentUser] = useState(null);
 
   const [aww, setAww] = React.useState(null);
+
+  async function login(username = "", password = "") {
+    try {
+      const secureStoreOptions = {
+        keychainService: Platform.OS === "ios" ? "iOS" : "Android",
+      };
+
+      // should return username#code
+      let user = await SecureStore.getItemAsync(
+        `${appNamespace}username`,
+        secureStoreOptions
+      );
+
+      // if (!username) {
+      //   let response = await fetch(
+      //     `https://awwtimer.firebaseio.com/users/${username}.json`
+      //   );
+      //   response = await response.json();
+      //   // user =
+      // }
+
+      setCurrentUser(user);
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
 
   React.useEffect(() => {
     async function getData() {
@@ -111,6 +144,7 @@ export default function App() {
     isTimerDone,
     isTimerStarted,
     isSharing,
+    isCreatingUser,
   } = timerState;
 
   React.useEffect(() => {
@@ -133,12 +167,47 @@ export default function App() {
     }
   }, [timer, isTimerActive]);
 
+  React.useEffect(() => {
+    login();
+  }, []);
+
+  if (isCreatingUser) {
+    return (
+      <View style={styles.container}>
+        <Text style={{ fontSize: 12 }}>Create a user</Text>
+        <SignUpForm
+          onUserCreated={(username) => {
+            setCurrentUser(username);
+            dispatch({ type: ACTION_TYPES.RESET });
+          }}
+        />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Text style={{ fontSize: 64 }}>Timer</Text>
+      {currentUser && <Text>{`Logged in as: ${currentUser}`}</Text>}
       <>
-        {/* <SignUpForm setCurrentUser={setCurrentUser} /> */}
-        {!isTimerStarted && !isTimerDone && <ChooseTime dispatch={dispatch} />}
+        {!isTimerStarted && !isTimerDone && (
+          <>
+            <ChooseTime dispatch={dispatch} />
+
+            {!currentUser && (
+              <TouchableOpacity
+                style={styles.button}
+                onPress={() =>
+                  dispatch({
+                    type: ACTION_TYPES.CREATE_USER,
+                  })
+                }
+              >
+                <Text style={styles.buttonText}>Create a user to share</Text>
+              </TouchableOpacity>
+            )}
+          </>
+        )}
 
         {isTimerStarted && !isTimerDone && (
           <TimerView
@@ -163,7 +232,6 @@ export default function App() {
 
         {isSharing && <FriendsList />}
       </>
-
       {isModalVisible && (
         <View style={{ flex: 4, width: "100%" }}>
           {isTimerDone && isModalVisible && (
