@@ -1,5 +1,14 @@
 import React from "react";
-import { StyleSheet } from "react-native";
+import {
+  Dimensions,
+  Image,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { FlatList } from "react-native-gesture-handler";
 
 export default function FriendsList({
   friends,
