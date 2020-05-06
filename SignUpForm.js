@@ -1,5 +1,5 @@
 import React from "react";
-import { Platform, Text, TextInput, TouchableOpacity } from "react-native";
+import { Platform, StyleSheet, Text, TextInput, TouchableOpacity } from "react-native";
 
 // function uuidv4() {
 //     return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
@@ -8,6 +8,18 @@ import { Platform, Text, TextInput, TouchableOpacity } from "react-native";
 //       return v.toString(16);
 //     });
 //   }
+
+function generateCode(){
+    let code = "", random = "0123456789";
+
+    while (code.length < 4) {
+        code += random[Math.floor(Math.random() * 11))]
+    }
+
+    console.log("code generated:", code)
+
+    return code;
+}
 
 export default function SignUpForm({ setLoading, setCurrentUser }) {
   const [username, setUsername] = React.useState("");

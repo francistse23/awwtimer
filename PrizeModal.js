@@ -1,6 +1,6 @@
 import React from "react";
 import FriendsList from "./FriendsList";
-import { Share } from "react-native";
+import { Share, StyleSheet } from "react-native";
 
 export default function PrizeModal({ aww, friends, onClose, ShareBtn }) {
   const [isSharing, setIsSharing] = React.useState(false);
