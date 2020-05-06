@@ -1,4 +1,4 @@
-import React, { useReducer } from "react";
+import React, { useState, useReducer } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -14,7 +14,9 @@ import {
 } from "react-native";
 import { Video } from "expo-av";
 import * as SecureStore from "expo-secure-store";
+import SignUpForm from "./SignUpForm";
 import PrizeModal from "./PrizeModal";
+import FriendsList from "./FriendsList";
 
 const ACTION_TYPES = {
   RESET: "RESET",
@@ -23,6 +25,7 @@ const ACTION_TYPES = {
   TOGGLE_TIMER: "TOGGLE_TIMER",
   TIMER_DONE: "TIMER_DONE",
   COLLECT_PRIZE: "COLLECT_PRIZE",
+  SHARE_PRIZE: "SHARE_PRIZE",
 };
 
 const initialState = {
@@ -31,6 +34,7 @@ const initialState = {
   isTimerStarted: false,
   isTimerActive: false,
   isTimerDone: false,
+  isSharing: false,
 };
 
 const appNamespace = "awwtimer-";
@@ -67,7 +71,12 @@ function reducer(state, action) {
         ...state,
         isModalVisible: true,
       };
-
+    case ACTION_TYPES.SHARE_PRIZE:
+      return {
+        ...state,
+        isSharing: true,
+        isModalVisible: false,
+      };
     default:
       throw new Error("get to work");
   }
@@ -75,10 +84,25 @@ function reducer(state, action) {
 
 export default function App() {
   const [timerState, dispatch] = useReducer(reducer, initialState);
-  const [awws, setAwws] = React.useState([]);
-  // const [prizes, setPrizes] = React.useState([]);
-  const [loading, setLoading] = React.useState(false);
-  const [currentUser, setCurrentUser] = React.useState("");
+  const [currentUser, setCurrentUser] = useState("");
+
+  const [aww, setAww] = React.useState(null);
+
+  React.useEffect(() => {
+    async function getData() {
+      const response = await fetch("https://www.reddit.com/r/aww/hot.json");
+      const data = await response.json();
+      const posts = data?.data?.children?.map((c) => c.data) ?? [];
+
+      const randomIndex = Math.floor(Math.random() * posts.length);
+      const aww = posts[3];
+      // const images = posts.filter((p) => p.url.endsWith(".jpg"));
+
+      setAww(aww);
+    }
+
+    getData();
+  }, []);
 
   const {
     timer,
@@ -86,11 +110,8 @@ export default function App() {
     isTimerActive,
     isTimerDone,
     isTimerStarted,
+    isSharing,
   } = timerState;
-
-  const { prizes } = currentUser;
-
-  const randomImage = Math.floor(Math.random() * awws.length);
 
   React.useEffect(() => {
     let runTimer;
@@ -112,131 +133,46 @@ export default function App() {
     }
   }, [timer, isTimerActive]);
 
-  React.useEffect(() => {
-    async function getData() {
-      const response = await fetch("https://www.reddit.com/r/aww/hot.json");
-      const data = await response.json();
-      const posts = data?.data?.children?.map((c) => c.data) ?? [];
-      // const images = posts.filter((p) => p.url.endsWith(".jpg"));
-      setAwws(posts);
-    }
-
-    getData();
-  }, []);
-
-  // share image to friend, show when their timer is complete
-  React.useEffect(() => {
-    // async function getPrizes() {
-    //   try {
-    //     let response = await fetch(
-    //       `https://awwtimer.firebaseio.com/users/${currentUser}/prizes.json`
-    //     );
-
-    //     let prizesJson = await response.json();
-
-    //     const prizes = Object.entries(prizesJson).flatMap(
-    //       ([username, urlsObj]) => {
-    //         return Object.values(urlsObj).map((u) => ({
-    //           from: username,
-    //           url: u,
-    //         }));
-    //       }
-    //     );
-    //     setPrizes(prizes);
-    //   } catch (error) {
-    //     console.error(error);
-    //   }
-    // }
-
-    async function login(username = "furanki", password = "") {
-      try {
-        const secureStoreOptions = {
-          keychainService: Platform.OS === "ios" ? "iOS" : "Android",
-        };
-
-        const username = await SecureStore.getItemAsync(
-          `${appNamespace}username`,
-          secureStoreOptions
-        );
-
-        let response = await fetch(
-          `https://awwtimer.firebaseio.com/users/${username}.json`
-        );
-
-        response = await response.json();
-
-        setCurrentUser({ username, ...response });
-      } catch (err) {
-        throw new Error(err);
-      }
-    }
-
-    if (currentUser.username) {
-      // getPrizes();
-    } else {
-      login();
-    }
-  }, [currentUser]);
-
   return (
     <View style={styles.container}>
       <Text style={{ fontSize: 64 }}>Timer</Text>
+      <>
+        {/* <SignUpForm setCurrentUser={setCurrentUser} /> */}
+        {!isTimerStarted && !isTimerDone && <ChooseTime dispatch={dispatch} />}
 
-      {/* auth route? */}
-      {!currentUser ? (
-        <>
-          {!loading ? (
-            <SignUpForm
-              setLoading={setLoading}
-              setCurrentUser={setCurrentUser}
-            />
-          ) : (
-            <ActivityIndicator animating={loading} size="large" />
-          )}
-        </>
-      ) : !isModalVisible ? (
-        <>
-          {prizes?.length > 0 && (
-            <Text style={{ fontSize: 18 }}>
-              {prizes.length} 🎁 waiting for u!
-            </Text>
-          )}
+        {isTimerStarted && !isTimerDone && (
+          <TimerView
+            isTimerActive={isTimerActive}
+            dispatch={dispatch}
+            timer={timer}
+          />
+        )}
 
-          {!isTimerStarted && !isTimerDone && (
-            <ChooseTime dispatch={dispatch} />
-          )}
+        {isTimerDone && (
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() =>
+              dispatch({
+                type: ACTION_TYPES.COLLECT_PRIZE,
+              })
+            }
+          >
+            <Text style={styles.buttonText}>Collect Your Prize :)</Text>
+          </TouchableOpacity>
+        )}
 
-          {isTimerStarted && !isTimerDone && (
-            <TimerView
-              isTimerActive={isTimerActive}
-              dispatch={dispatch}
-              timer={timer}
-            />
-          )}
+        {isSharing && <FriendsList />}
+      </>
 
-          {isTimerDone && (
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() =>
-                dispatch({
-                  type: ACTION_TYPES.COLLECT_PRIZE,
-                })
-              }
-            >
-              <Text style={styles.buttonText}>Collect Your Prize :)</Text>
-            </TouchableOpacity>
-          )}
-        </>
-      ) : (
+      {isModalVisible && (
         <View style={{ flex: 4, width: "100%" }}>
-          {!isSharing && isTimerDone && isModalVisible && awws.length > 0 && (
+          {isTimerDone && isModalVisible && (
             <PrizeModal
-              aww={awws[randomImage]}
-              friends={currentUser.friends}
+              aww={aww}
               onClose={() => dispatch({ type: ACTION_TYPES.RESET })}
               ShareBtn={() => (
                 <TouchableOpacity
-                  onPress={() => setIsSharing(true)}
+                  onPress={() => dispatch({ type: ACTION_TYPES.SHARE_PRIZE })}
                   style={styles.button}
                 >
                   <Text style={{ color: "white", fontSize: 18 }}>
@@ -246,8 +182,6 @@ export default function App() {
               )}
             />
           )}
-
-          {isSharing && <FriendsList />}
         </View>
       )}
     </View>
