@@ -1,7 +1,8 @@
 import React from "react";
 import FriendsList from "./FriendsList";
+import { Share } from "react-native";
 
-export default function PrizeModal({ aww, friends, onClose }) {
+export default function PrizeModal({ aww, friends, onClose, ShareBtn }) {
   const [isSharing, setIsSharing] = React.useState(false);
   const [selectedFriends, setSelectedFriends] = React.useState([]);
   const videoRef = React.useRef(null);
@@ -88,23 +89,7 @@ export default function PrizeModal({ aww, friends, onClose }) {
           </>
         )}
 
-        {isSharing ? (
-          <FriendsList
-            selectedFriends={selectedFriends}
-            setSelectedFriends={setSelectedFriends}
-            friends={friends}
-            shareToFriends={shareToFriends}
-          />
-        ) : (
-          <TouchableOpacity
-            onPress={() => setIsSharing(true)}
-            style={styles.button}
-          >
-            <Text style={{ color: "white", fontSize: 18 }}>
-              Share ( because you care :) )
-            </Text>
-          </TouchableOpacity>
-        )}
+        <ShareBtn />
       </View>
     </Modal>
   );

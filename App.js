@@ -229,13 +229,25 @@ export default function App() {
         </>
       ) : (
         <View style={{ flex: 4, width: "100%" }}>
-          {isTimerDone && isModalVisible && awws.length > 0 && (
+          {!isSharing && isTimerDone && isModalVisible && awws.length > 0 && (
             <PrizeModal
               aww={awws[randomImage]}
               friends={currentUser.friends}
               onClose={() => dispatch({ type: ACTION_TYPES.RESET })}
+              ShareBtn={() => (
+                <TouchableOpacity
+                  onPress={() => setIsSharing(true)}
+                  style={styles.button}
+                >
+                  <Text style={{ color: "white", fontSize: 18 }}>
+                    Share ( because you care :) )
+                  </Text>
+                </TouchableOpacity>
+              )}
             />
           )}
+
+          {isSharing && <FriendsList />}
         </View>
       )}
     </View>
