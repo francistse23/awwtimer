@@ -89,7 +89,11 @@ export default function PrizeModal({ aww, onClose, ShareBtn }) {
                 resizeMode="contain"
                 shouldPlay
                 source={{
-                  uri: aww.secure_media?.reddit_video?.fallback_url,
+                  uri:
+                    aww?.crosspost_parent_list?.length > 0
+                      ? aww.crosspost_parent_list[0].secure_media.reddit_video
+                          .fallback_url
+                      : aww.secure_media?.reddit_video?.fallback_url,
                 }}
                 style={{ flex: 1 }}
                 useNativeControls
