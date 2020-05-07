@@ -187,12 +187,21 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Text style={{ fontSize: 64 }}>Timer</Text>
-      {currentUser && <Text>{`Logged in as: ${currentUser}`}</Text>}
+      <Text style={{ fontSize: 36, paddingHorizontal: 12 }}>
+        {`( ∩ˇωˇ∩)♡\nかわいい\nタイマー`}
+      </Text>
       <>
         {!isTimerStarted && !isTimerDone && (
           <>
-            <ChooseTime dispatch={dispatch} />
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <ChooseTime dispatch={dispatch} />
+            </View>
 
             {!currentUser && (
               <TouchableOpacity
@@ -226,7 +235,7 @@ export default function App() {
               })
             }
           >
-            <Text style={styles.buttonText}>Collect Your Prize :)</Text>
+            <Text style={styles.buttonText}>Open 🎁 :)</Text>
           </TouchableOpacity>
         )}
 
@@ -235,6 +244,11 @@ export default function App() {
             onClose={() => dispatch({ type: ACTION_TYPES.RESET })}
             currentUser={currentUser}
           />
+        )}
+        {currentUser && !isTimerStarted && (
+          <Text
+            style={styles.altText}
+          >{`connect with friends as ${currentUser}`}</Text>
         )}
       </>
       {isModalVisible && (
@@ -261,25 +275,41 @@ export default function App() {
   );
 }
 
+// https://reactnative.dev/docs/transforms
 const ChooseTime = ({ dispatch }) => (
-  <View style={{ flex: 5 }}>
+  <View>
     <TouchableOpacity
       onPress={() => dispatch({ type: ACTION_TYPES.START_TIME, time: 1 })}
-      style={styles.button}
+      style={[
+        styles.button,
+        {
+          transform: [{ rotate: "-3deg" }],
+        },
+      ]}
     >
       <Text style={styles.buttonText}>1 minutes</Text>
     </TouchableOpacity>
 
     <TouchableOpacity
       onPress={() => dispatch({ type: ACTION_TYPES.START_TIME, time: 15 })}
-      style={styles.button}
+      style={[
+        styles.button,
+        {
+          transform: [{ rotate: "7deg" }],
+        },
+      ]}
     >
       <Text style={styles.buttonText}>15 minutes</Text>
     </TouchableOpacity>
 
     <TouchableOpacity
       onPress={() => dispatch({ type: ACTION_TYPES.START_TIME, time: 30 })}
-      style={styles.button}
+      style={[
+        styles.button,
+        {
+          transform: [{ rotate: "-9deg" }],
+        },
+      ]}
     >
       <Text style={styles.buttonText}>30 minutes</Text>
     </TouchableOpacity>
@@ -300,6 +330,7 @@ const TimerView = ({ isTimerActive, dispatch, timer }) => {
     <View
       style={{
         alignItems: "center",
+        justifyContent: "center",
         flex: 5,
         width: "100%",
       }}
@@ -318,21 +349,24 @@ const TimerView = ({ isTimerActive, dispatch, timer }) => {
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: "royalblue",
+    backgroundColor: "#679b9b",
     borderRadius: 10,
+    borderColor: "white",
+    borderWidth: 3,
     padding: 12,
-    margin: 12,
+    margin: 30,
   },
   buttonText: {
     color: "white",
     fontSize: 24,
     textAlign: "center",
+    fontWeight: "bold",
   },
   container: {
     alignItems: "center",
-    backgroundColor: "white",
+    backgroundColor: "#ffb6b6",
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 48,
   },
   input: {
     borderColor: "black",
@@ -341,5 +375,9 @@ const styles = StyleSheet.create({
     margin: 8,
     padding: 8,
     width: "60%",
+  },
+  altText: {
+    color: "#333",
+    fontWeight: "300",
   },
 });
