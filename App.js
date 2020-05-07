@@ -190,7 +190,13 @@ export default function App() {
       <Text style={{ fontSize: 36, paddingHorizontal: 12 }}>
         {`( ∩ˇωˇ∩)♡\nかわいい\nタイマー`}
       </Text>
-      <>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
         {!isTimerStarted && !isTimerDone && (
           <>
             <View
@@ -235,7 +241,9 @@ export default function App() {
               })
             }
           >
-            <Text style={styles.buttonText}>Open 🎁 :)</Text>
+            <Text style={styles.buttonText}>
+              🎁 <Text style={{ fontWeight: "300" }}>ʕ•ᴥ•ʔ</Text>
+            </Text>
           </TouchableOpacity>
         )}
 
@@ -250,7 +258,7 @@ export default function App() {
             style={styles.altText}
           >{`connect with friends as ${currentUser}`}</Text>
         )}
-      </>
+      </View>
       {isModalVisible && (
         <View style={{ flex: 4, width: "100%" }}>
           {isTimerDone && isModalVisible && (
@@ -263,7 +271,7 @@ export default function App() {
                   style={styles.button}
                 >
                   <Text style={{ color: "white", fontSize: 18 }}>
-                    Share ( because you care :) )
+                    Share ( because you care ʕ๑•ᴥ•ʔ )
                   </Text>
                 </TouchableOpacity>
               )}

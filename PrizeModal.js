@@ -43,7 +43,7 @@ export default function PrizeModal({ aww, onClose, ShareBtn }) {
       style={{ flex: 1, width: "100%" }}
       visible={true}
     >
-      <View style={{ alignItems: "center", flex: 1, paddingVertical: 8 }}>
+      <View style={styles.container}>
         <TouchableOpacity
           onPress={onClose}
           style={{ alignSelf: "flex-start", margin: 8 }}
@@ -109,9 +109,15 @@ export default function PrizeModal({ aww, onClose, ShareBtn }) {
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: "royalblue",
+    backgroundColor: "#679b9b",
     borderRadius: 10,
     padding: 12,
     margin: 12,
+  },
+  container: {
+    alignItems: "center",
+    backgroundColor: "#ffb6b6",
+    flex: 1,
+    paddingVertical: 8,
   },
 });
