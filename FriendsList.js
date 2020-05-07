@@ -1,21 +1,45 @@
 import React from "react";
-import {
-  Dimensions,
-  Image,
-  Modal,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 
-export default function FriendsList({
-  friends,
-  selectedFriends,
-  setSelectedFriends,
-  shareToFriends,
-}) {
+export default function FriendsList({ onClose, currentUser }) {
+  const [selectedFriends, setSelectedFriends] = React.useState([]);
+
+  const shareToFriends = async () => {
+    try {
+      for (let friend of selectedFriends) {
+        const data = [
+          aww.is_video ? aww.secure_media?.reddit_video?.dash_url : aww.url,
+          // following structure will throw an error
+          // {
+          //   [aww.id]: aww.is_video
+          //     ? aww.secure_media?.reddit_video?.dash_url
+          //     : aww.url,
+          // },
+        ];
+
+        let res = await fetch(
+          `https://awwtimer.firebaseio.com/users/${friend}/prizes.json`,
+          {
+            body: JSON.stringify(data),
+            headers: {
+              "Content-Type": "application/json",
+            },
+            // dont use post or put
+            // post, firebase will auto-generate a key/id and use that as the new user object's key, too chaotic
+            // put, replaces all users (effectively wiping all users)
+            method: "patch",
+            mode: "cors",
+          }
+        );
+        // res = await res.json();
+        // console.log("After sharing", res);
+      }
+    } catch (err) {
+      throw new Error(err);
+    }
+  };
+
   const addFriend = (friend) => {
     if (selectedFriends.includes(friend)) {
       let temp = [...selectedFriends];
