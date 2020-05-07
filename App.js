@@ -1,17 +1,14 @@
 import React, { useState, useReducer } from "react";
 import {
-  ActivityIndicator,
-  Dimensions,
-  FlatList,
-  Modal,
   Platform,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
-  Image,
 } from "react-native";
+import GestureRecognizer, {
+  swipeDirections,
+} from "react-native-swipe-gestures";
 import { Video } from "expo-av";
 import * as SecureStore from "expo-secure-store";
 import SignUpForm from "./SignUpForm";
@@ -147,6 +144,20 @@ export default function App() {
     isCreatingUser,
   } = timerState;
 
+  const config = {
+    velocityThreshold: 0.3,
+    directionalOffsetThreshold: 80,
+  };
+
+  const handleSwipe = (gestureName) => {
+    const { SWIPE_RIGHT } = swipeDirections;
+
+    switch (gestureName) {
+      case SWIPE_RIGHT:
+        dispatch({ type: ACTION_TYPES.RESET });
+    }
+  };
+
   React.useEffect(() => {
     let runTimer;
 
@@ -186,100 +197,106 @@ export default function App() {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={{ fontSize: 36, paddingHorizontal: 12 }}>
-        {`( ∩ˇωˇ∩)♡\nかわいい\nタイマー`}
-      </Text>
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        {!isTimerStarted && !isTimerDone && (
-          <>
-            <View
-              style={{
-                flex: 1,
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <ChooseTime dispatch={dispatch} />
-            </View>
-
-            {!currentUser && (
-              <TouchableOpacity
-                style={styles.button}
-                onPress={() =>
-                  dispatch({
-                    type: ACTION_TYPES.CREATE_USER,
-                  })
-                }
+    <GestureRecognizer
+      config={config}
+      onSwipe={(direction) => handleSwipe(direction)}
+      style={{ flex: 1 }}
+    >
+      <View style={styles.container}>
+        <Text style={{ fontSize: 36, paddingHorizontal: 12 }}>
+          {`( ∩ˇωˇ∩)♡\nかわいい\nタイマー`}
+        </Text>
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          {!isTimerStarted && !isTimerDone && (
+            <>
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
               >
-                <Text style={styles.buttonText}>Create a user to share</Text>
-              </TouchableOpacity>
-            )}
-          </>
-        )}
+                <ChooseTime dispatch={dispatch} />
+              </View>
 
-        {isTimerStarted && !isTimerDone && (
-          <TimerView
-            isTimerActive={isTimerActive}
-            dispatch={dispatch}
-            timer={timer}
-          />
-        )}
-
-        {isTimerDone && !isSharing && (
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() =>
-              dispatch({
-                type: ACTION_TYPES.COLLECT_PRIZE,
-              })
-            }
-          >
-            <Text style={styles.buttonText}>
-              🎁 <Text style={{ fontWeight: "300" }}>ʕ•ᴥ•ʔ</Text>
-            </Text>
-          </TouchableOpacity>
-        )}
-
-        {isSharing && (
-          <FriendsList
-            onClose={() => dispatch({ type: ACTION_TYPES.RESET })}
-            currentUser={currentUser}
-          />
-        )}
-        {currentUser && !isTimerStarted && (
-          <Text
-            style={styles.altText}
-          >{`connect with friends as ${currentUser}`}</Text>
-        )}
-      </View>
-      {isModalVisible && (
-        <View style={{ flex: 4, width: "100%" }}>
-          {isTimerDone && isModalVisible && (
-            <PrizeModal
-              aww={aww}
-              onClose={() => dispatch({ type: ACTION_TYPES.RESET })}
-              ShareBtn={() => (
+              {!currentUser && (
                 <TouchableOpacity
-                  onPress={() => dispatch({ type: ACTION_TYPES.SHARE_PRIZE })}
                   style={styles.button}
+                  onPress={() =>
+                    dispatch({
+                      type: ACTION_TYPES.CREATE_USER,
+                    })
+                  }
                 >
-                  <Text style={{ color: "white", fontSize: 18 }}>
-                    Share ( because you care ʕ๑•ᴥ•ʔ )
-                  </Text>
+                  <Text style={styles.buttonText}>Create a user to share</Text>
                 </TouchableOpacity>
               )}
+            </>
+          )}
+
+          {isTimerStarted && !isTimerDone && (
+            <TimerView
+              isTimerActive={isTimerActive}
+              dispatch={dispatch}
+              timer={timer}
             />
           )}
+
+          {isTimerDone && !isSharing && (
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() =>
+                dispatch({
+                  type: ACTION_TYPES.COLLECT_PRIZE,
+                })
+              }
+            >
+              <Text style={styles.buttonText}>
+                🎁 <Text style={{ fontWeight: "300" }}>ʕ•ᴥ•ʔ</Text>
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {isSharing && (
+            <FriendsList
+              onClose={() => dispatch({ type: ACTION_TYPES.RESET })}
+              currentUser={currentUser}
+            />
+          )}
+          {currentUser && !isTimerStarted && (
+            <Text
+              style={styles.altText}
+            >{`connect with friends as ${currentUser}`}</Text>
+          )}
         </View>
-      )}
-    </View>
+        {isModalVisible && (
+          <View style={{ flex: 4, width: "100%" }}>
+            {isTimerDone && isModalVisible && (
+              <PrizeModal
+                aww={aww}
+                onClose={() => dispatch({ type: ACTION_TYPES.RESET })}
+                ShareBtn={() => (
+                  <TouchableOpacity
+                    onPress={() => dispatch({ type: ACTION_TYPES.SHARE_PRIZE })}
+                    style={styles.button}
+                  >
+                    <Text style={{ color: "white", fontSize: 18 }}>
+                      Share ( because you care ʕ๑•ᴥ•ʔ )
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+          </View>
+        )}
+      </View>
+    </GestureRecognizer>
   );
 }
 
