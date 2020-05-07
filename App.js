@@ -217,7 +217,7 @@ export default function App() {
           />
         )}
 
-        {isTimerDone && (
+        {isTimerDone && !isSharing && (
           <TouchableOpacity
             style={styles.button}
             onPress={() =>
