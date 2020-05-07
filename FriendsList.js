@@ -4,6 +4,19 @@ import { FlatList } from "react-native-gesture-handler";
 
 export default function FriendsList({ onClose, currentUser }) {
   const [selectedFriends, setSelectedFriends] = React.useState([]);
+  const [friends, setFriends] = React.useState([]);
+  const [error, setError] = React.useState(null);
+
+  React.useEffect(() => {
+    (async function () {
+      try {
+        const friends = await getFriends(currentUser);
+        setFriends(friends);
+      } catch (e) {
+        setError(e);
+      }
+    })();
+  }, []);
 
   const shareToFriends = async () => {
     try {
@@ -59,6 +72,12 @@ export default function FriendsList({ onClose, currentUser }) {
           data={friends}
           horizontal
           keyExtractor={(item) => Object.keys(item)[0]}
+          ListEmptyComponent={() => (
+            <Text>
+              {error && "Sry, we suck and can't find your friends"}
+              {!error && "find some friends"}
+            </Text>
+          )}
           renderItem={({ item }) => {
             const [friendName] = Object.keys(item);
 
@@ -90,6 +109,25 @@ export default function FriendsList({ onClose, currentUser }) {
       </View>
     </>
   );
+}
+
+async function getFriends(currentUser) {
+  try {
+    console.log(`finding friends for ${currentUser}`);
+    let response = await fetch(
+      `https://awwtimer.firebaseio.com/friends/${currentUser}.json`
+    );
+
+    let responseJson = await response.json();
+
+    const friends = Object.entries(responseJson)
+      .filter(([username, isFriend]) => Boolean(isFriend))
+      .map(([username, isFriend]) => username);
+
+    return friends;
+  } catch (error) {
+    throw new Error("could not get friends");
+  }
 }
 
 const styles = StyleSheet.create({
