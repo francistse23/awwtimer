@@ -102,7 +102,7 @@ export default function PrizeModal({ aww, onClose, ShareBtn }) {
             />
           )}
 
-          {aww.secure_media.oembed && (
+          {aww?.secure_media?.oembed && (
             <Image
               resizeMode="contain"
               source={{
