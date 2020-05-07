@@ -230,7 +230,12 @@ export default function App() {
           </TouchableOpacity>
         )}
 
-        {isSharing && <FriendsList />}
+        {isSharing && (
+          <FriendsList
+            onClose={() => dispatch({ type: ACTION_TYPES.RESET })}
+            currentUser={currentUser}
+          />
+        )}
       </>
       {isModalVisible && (
         <View style={{ flex: 4, width: "100%" }}>

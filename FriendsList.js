@@ -106,6 +106,9 @@ export default function FriendsList({ onClose, currentUser }) {
         >
           <Text style={styles.buttonText}>Share</Text>
         </TouchableOpacity>
+        <TouchableOpacity onPress={onClose} style={styles.button}>
+          <Text style={styles.buttonText}>Close</Text>
+        </TouchableOpacity>
       </View>
     </>
   );
