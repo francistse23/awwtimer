@@ -14,12 +14,15 @@ import * as SecureStore from "expo-secure-store";
 import SignUpForm from "./SignUpForm";
 import PrizeModal from "./PrizeModal";
 import FriendsList from "./FriendsList";
+import { Notifications, Constants } from "expo";
+import * as Permissions from "expo-permissions";
 
 const ACTION_TYPES = {
   RESET: "RESET",
   START_TIME: "START_TIME",
   PAUSE_TIME: "PAUSE_TIME",
   TOGGLE_TIMER: "TOGGLE_TIMER",
+  TIMER_TICK: "TIMER_TICK",
   TIMER_DONE: "TIMER_DONE",
   COLLECT_PRIZE: "COLLECT_PRIZE",
   SHARE_PRIZE: "SHARE_PRIZE",
@@ -34,6 +37,8 @@ const initialState = {
   isTimerDone: false,
   isSharing: false,
   isCreatingUser: false,
+  timerEndDate: null,
+  unsubscribeFromNotifications: () => {},
 };
 
 const appNamespace = "awwtimer-";
@@ -41,18 +46,70 @@ const appNamespace = "awwtimer-";
 function reducer(state, action) {
   switch (action.type) {
     case ACTION_TYPES.RESET:
+      state.unsubscribeFromNotifications();
+
       return initialState;
     case ACTION_TYPES.START_TIME:
+      console.log("starting timer");
+      /*
+       * need to handle two cases.
+       * 1. User leaves the app open
+       * 2. User starts timer and locks screen
+       */
+
+      const timerEndDate =
+        new Date().getTime() + action.durationInSeconds * 1000;
+
+      /*
+       * Handle case 2 with local notifications. When system clock reaches
+       * timerEndDate, a notification will prompt the user to open the app to
+       * collect the prize.
+       */
+      const localNotification = {
+        title: "Aww Timer",
+        body: "Good job! Open your reward and take a break!",
+        data: { isTimerDone: true },
+      };
+
+      const unsubscribeFromNotifications = Notifications.addListener(
+        (notification) => {
+          console.log("Notification received:", notification);
+          if (notification?.data?.isTimerDone) {
+            dispatch({ type: ACTION_TYPES.TIMER_DONE });
+          }
+        }
+      );
+
+      const schedulingOptions = {
+        time: timerEndDate,
+      };
+
+      // clear all existing notifications before we schedule one
+      Notifications.cancelAllScheduledNotificationsAsync();
+
+      Notifications.scheduleLocalNotificationAsync(
+        localNotification,
+        schedulingOptions
+      )
+        .then(() => console.log("schedule notification"))
+        .catch((err) => console.error(err));
+
+      /*
+       * Handle case 1 by setting timerEndDate in local state. The view will
+       * show the difference between the end date and system time.
+       */
       return {
         ...state,
         isTimerStarted: true,
         isTimerActive: true,
-        timer: action.time * 60,
+        timer: Math.ceil((timerEndDate - new Date().getTime()) / 1000),
+        timerEndDate,
+        unsubscribeFromNotifications,
       };
     case ACTION_TYPES.TIMER_TICK:
       return {
         ...state,
-        timer: state.timer - 1,
+        timer: Math.ceil((state.timerEndDate - new Date().getTime()) / 1000),
       };
     case ACTION_TYPES.TOGGLE_TIMER:
       return {
@@ -64,6 +121,7 @@ function reducer(state, action) {
         ...state,
         isTimerActive: false,
         isTimerDone: true,
+        timerEndDate: null,
       };
     case ACTION_TYPES.COLLECT_PRIZE:
       return {
@@ -134,8 +192,13 @@ export default function App() {
     getData();
   }, []);
 
+  React.useEffect(() => {
+    askForNotificationPermissions();
+  }, []);
+
   const {
     timer,
+    timerEndDate,
     isModalVisible,
     isTimerActive,
     isTimerDone,
@@ -158,25 +221,25 @@ export default function App() {
     }
   };
 
+  // get the system time every second so we can display the difference
+  // between it and the timerEndDate
   React.useEffect(() => {
     let runTimer;
 
-    if (isTimerActive && timer > 0) {
-      runTimer = setInterval(
-        () => dispatch({ type: ACTION_TYPES.TIMER_TICK }),
-        1
-      );
+    if (isTimerActive && timerEndDate) {
+      runTimer = setInterval(() => {
+        const now = new Date().getTime();
+        const timeRemaining = Math.ceil((timerEndDate - now) / 1000);
+        if (timeRemaining < 0) {
+          dispatch({ type: ACTION_TYPES.TIMER_DONE });
+        } else {
+          dispatch({ type: ACTION_TYPES.TIMER_TICK });
+        }
+      }, 1000);
     }
 
     return () => clearInterval(runTimer);
-  }, [isTimerActive]);
-
-  // !important
-  React.useEffect(() => {
-    if (isTimerActive && timer <= 0) {
-      dispatch({ type: ACTION_TYPES.TIMER_DONE });
-    }
-  }, [timer, isTimerActive]);
+  }, [timerEndDate]);
 
   React.useEffect(() => {
     login();
@@ -304,7 +367,9 @@ export default function App() {
 const ChooseTime = ({ dispatch }) => (
   <View>
     <TouchableOpacity
-      onPress={() => dispatch({ type: ACTION_TYPES.START_TIME, time: 1 })}
+      onPress={() =>
+        dispatch({ type: ACTION_TYPES.START_TIME, durationInSeconds: 5 })
+      }
       style={[
         styles.button,
         {
@@ -316,7 +381,9 @@ const ChooseTime = ({ dispatch }) => (
     </TouchableOpacity>
 
     <TouchableOpacity
-      onPress={() => dispatch({ type: ACTION_TYPES.START_TIME, time: 15 })}
+      onPress={() =>
+        dispatch({ type: ACTION_TYPES.START_TIME, durationInSeconds: 15 * 60 })
+      }
       style={[
         styles.button,
         {
@@ -328,7 +395,9 @@ const ChooseTime = ({ dispatch }) => (
     </TouchableOpacity>
 
     <TouchableOpacity
-      onPress={() => dispatch({ type: ACTION_TYPES.START_TIME, time: 30 })}
+      onPress={() =>
+        dispatch({ type: ACTION_TYPES.START_TIME, durationInSeconds: 30 * 60 })
+      }
       style={[
         styles.button,
         {
@@ -342,9 +411,9 @@ const ChooseTime = ({ dispatch }) => (
 );
 
 const TimerView = ({ isTimerActive, dispatch, timer }) => {
-  const calculateTimeRemaining = (time) => {
-    const mins = Math.floor(time / 60);
-    const seconds = time % 60;
+  const formatTimeRemaining = (timeInSeconds) => {
+    const mins = Math.floor(timeInSeconds / 60);
+    const seconds = timeInSeconds % 60;
 
     return `${mins >= 10 ? mins : `0${mins}`}:${
       seconds.toString().length > 1 ? seconds : `0${seconds}`
@@ -360,7 +429,7 @@ const TimerView = ({ isTimerActive, dispatch, timer }) => {
         width: "100%",
       }}
     >
-      <Text style={{ fontSize: 40 }}>{calculateTimeRemaining(timer)}</Text>
+      <Text style={{ fontSize: 40 }}>{formatTimeRemaining(timer)}</Text>
       <TouchableOpacity
         onPress={() => dispatch({ type: ACTION_TYPES.TOGGLE_TIMER })}
       >
@@ -406,3 +475,30 @@ const styles = StyleSheet.create({
     fontWeight: "300",
   },
 });
+
+// taken from https://snack.expo.io/?platform=android&name=Push%20Notifications&sdkVersion=37.0.0&dependencies=expo-constants%2Cexpo-permissions&sourceUrl=https%3A%2F%2Fdocs.expo.io%2Fstatic%2Fexamples%2Fv37.0.0%2Fpushnotifications.js
+async function askForNotificationPermissions() {
+  const { status: existingStatus } = await Permissions.getAsync(
+    Permissions.USER_FACING_NOTIFICATIONS
+  );
+  let finalStatus = existingStatus;
+  if (existingStatus !== "granted") {
+    const { status } = await Permissions.askAsync(
+      Permissions.USER_FACING_NOTIFICATIONS
+    );
+    finalStatus = status;
+  }
+  if (finalStatus !== "granted") {
+    console.log("Failed to get permissions for notifications");
+    return;
+  }
+
+  if (Platform.OS === "android") {
+    Notifications.createChannelAndroidAsync("default", {
+      name: "default",
+      sound: true,
+      priority: "max",
+      vibrate: [0, 250, 250, 250],
+    });
+  }
+}
