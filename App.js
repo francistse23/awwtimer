@@ -21,7 +21,6 @@ const ACTION_TYPES = {
   RESET: "RESET",
   START_TIME: "START_TIME",
   PAUSE_TIME: "PAUSE_TIME",
-  TOGGLE_TIMER: "TOGGLE_TIMER",
   TIMER_TICK: "TIMER_TICK",
   TIMER_DONE: "TIMER_DONE",
   COLLECT_PRIZE: "COLLECT_PRIZE",
@@ -33,7 +32,6 @@ const initialState = {
   isModalVisible: false,
   timer: 0,
   isTimerStarted: false,
-  isTimerActive: false,
   isTimerDone: false,
   isSharing: false,
   isCreatingUser: false,
@@ -89,7 +87,6 @@ function reducer(state, action) {
       return {
         ...state,
         isTimerStarted: true,
-        isTimerActive: true,
         timer: Math.ceil((timerEndDate - new Date().getTime()) / 1000),
         timerEndDate,
       };
@@ -98,15 +95,9 @@ function reducer(state, action) {
         ...state,
         timer: Math.ceil((state.timerEndDate - new Date().getTime()) / 1000),
       };
-    case ACTION_TYPES.TOGGLE_TIMER:
-      return {
-        ...state,
-        isTimerActive: !state.isTimerActive,
-      };
     case ACTION_TYPES.TIMER_DONE:
       return {
         ...state,
-        isTimerActive: false,
         isTimerDone: true,
         timerEndDate: null,
       };
@@ -187,7 +178,6 @@ export default function App() {
     timer,
     timerEndDate,
     isModalVisible,
-    isTimerActive,
     isTimerDone,
     isTimerStarted,
     isSharing,
@@ -213,7 +203,7 @@ export default function App() {
   React.useEffect(() => {
     let runTimer;
 
-    if (isTimerActive && timerEndDate) {
+    if (timerEndDate) {
       runTimer = setInterval(() => {
         const now = new Date().getTime();
         const timeRemaining = Math.ceil((timerEndDate - now) / 1000);
@@ -239,7 +229,7 @@ export default function App() {
       }
     );
 
-    return () => unsubscribeFromNotifications();
+    return () => unsubscribeFromNotifications.remove();
   }, []);
 
   if (isCreatingUser) {
@@ -301,11 +291,7 @@ export default function App() {
           )}
 
           {isTimerStarted && !isTimerDone && (
-            <TimerView
-              isTimerActive={isTimerActive}
-              dispatch={dispatch}
-              timer={timer}
-            />
+            <TimerView dispatch={dispatch} timer={timer} />
           )}
 
           {isTimerDone && !isSharing && (
@@ -407,7 +393,7 @@ const ChooseTime = ({ dispatch }) => (
   </View>
 );
 
-const TimerView = ({ isTimerActive, dispatch, timer }) => {
+const TimerView = ({ timer }) => {
   const formatTimeRemaining = (timeInSeconds) => {
     const mins = Math.floor(timeInSeconds / 60);
     const seconds = timeInSeconds % 60;
@@ -427,13 +413,6 @@ const TimerView = ({ isTimerActive, dispatch, timer }) => {
       }}
     >
       <Text style={{ fontSize: 40 }}>{formatTimeRemaining(timer)}</Text>
-      <TouchableOpacity
-        onPress={() => dispatch({ type: ACTION_TYPES.TOGGLE_TIMER })}
-      >
-        <Text style={{ fontSize: 40 }}>
-          {isTimerActive ? "Pause" : "Start"}
-        </Text>
-      </TouchableOpacity>
     </View>
   );
 };
@@ -474,6 +453,7 @@ const styles = StyleSheet.create({
 });
 
 // taken from https://snack.expo.io/?platform=android&name=Push%20Notifications&sdkVersion=37.0.0&dependencies=expo-constants%2Cexpo-permissions&sourceUrl=https%3A%2F%2Fdocs.expo.io%2Fstatic%2Fexamples%2Fv37.0.0%2Fpushnotifications.js
+// https://docs.expo.io/versions/v37.0.0/sdk/permissions/
 async function askForNotificationPermissions() {
   const { status: existingStatus } = await Permissions.getAsync(
     Permissions.USER_FACING_NOTIFICATIONS
