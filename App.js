@@ -161,12 +161,16 @@ export default function App() {
       // prizes from local storage
       let prizesInStorage = await AsyncStorage.getItem(`${appNamespace}prizes`);
 
+      console.log("prizes in storage", prizesInStorage);
+
       // prizes from database
       let response = await fetch(
         `https://awwtimer.firebaseio.com/prizes/${user.split("#")[0]}.json`
       );
 
       let prizesJson = await response.json();
+
+      console.log("prizes from db", prizesJson);
 
       if (prizesInStorage || prizesJson) {
         const data =
@@ -383,8 +387,18 @@ export default function App() {
                     : aww
                 }
                 isPrize={Object.keys(prizes).length > 0 ? true : false}
-                onClose={(isPrize, prizeId) => {
-                  if (isPrize) delete prizes[prizeId];
+                onClose={async (isPrize, prizeId) => {
+                  if (isPrize) {
+                    delete prizes[prizeId];
+                    if (Object.keys(prizes).length > 0) {
+                      await AsyncStorage.setItem(
+                        `${appNamespace}prizes`,
+                        JSON.stringify(prizes)
+                      );
+                    } else {
+                      await AsyncStorage.removeItem(`${appNamespace}prizes`);
+                    }
+                  }
                   dispatch({ type: ACTION_TYPES.RESET });
                 }}
                 ShareBtn={() => (

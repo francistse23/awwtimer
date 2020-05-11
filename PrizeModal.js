@@ -33,7 +33,9 @@ export default function PrizeModal({ aww, isPrize, onClose, ShareBtn }) {
         </TouchableOpacity>
 
         <>
-          <Text style={{ textAlign: "center" }}>{aww.title}</Text>
+          <Text style={{ paddingHorizontal: 12, textAlign: "center" }}>
+            {aww.title}
+          </Text>
 
           {aww.url.endsWith(".jpg") && (
             <Image
