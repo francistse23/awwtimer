@@ -157,16 +157,15 @@ export default function App() {
   async function getPrizes(user) {
     try {
       // await AsyncStorage.removeItem(`${appNamespace}prizes`);
-      // await AsyncStorage.getItem(`${appNamespace}prizes`);
 
       // prizes from local storage
       let prizesInStorage = await AsyncStorage.getItem(`${appNamespace}prizes`);
 
+      // prizes from database
       let response = await fetch(
         `https://awwtimer.firebaseio.com/prizes/${user.split("#")[0]}.json`
       );
 
-      // prizes from database
       let prizesJson = await response.json();
 
       if (prizesInStorage || prizesJson) {
@@ -228,7 +227,7 @@ export default function App() {
       const posts = data?.data?.children?.map((c) => c.data) ?? [];
 
       const randomIndex = Math.floor(Math.random() * posts.length);
-      const aww = posts[3];
+      const aww = posts[1];
       // const images = posts.filter((p) => p.url.endsWith(".jpg"));
 
       setAww(aww);
@@ -307,7 +306,7 @@ export default function App() {
           }}
         >
           {prizes && (
-            <Text>{Object.keys(prizes).length} prizes waiting for you</Text>
+            <Text>{Object.keys(prizes).length} prizes waiting for you!</Text>
           )}
 
           {!isTimerStarted && !isTimerDone && (
@@ -358,7 +357,12 @@ export default function App() {
 
           {isSharing && (
             <FriendsList
-              aww={aww}
+              aww={
+                Object.keys(prizes).length > 0
+                  ? prizes[Object.keys(prizes)[0]]
+                  : aww
+              }
+              isPrize={Object.keys(prizes).length > 0 ? true : false}
               onClose={() => dispatch({ type: ACTION_TYPES.RESET })}
               currentUser={currentUser}
             />
@@ -373,8 +377,16 @@ export default function App() {
           <View style={{ flex: 4, width: "100%" }}>
             {isTimerDone && isModalVisible && (
               <PrizeModal
-                aww={aww}
-                onClose={() => dispatch({ type: ACTION_TYPES.RESET })}
+                aww={
+                  Object.keys(prizes).length > 0
+                    ? prizes[Object.keys(prizes)[0]]
+                    : aww
+                }
+                isPrize={Object.keys(prizes).length > 0 ? true : false}
+                onClose={(isPrize, prizeId) => {
+                  if (isPrize) delete prizes[prizeId];
+                  dispatch({ type: ACTION_TYPES.RESET });
+                }}
                 ShareBtn={() => (
                   <TouchableOpacity
                     onPress={() => dispatch({ type: ACTION_TYPES.SHARE_PRIZE })}

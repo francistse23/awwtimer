@@ -10,7 +10,10 @@ import {
 } from "react-native";
 import { Video } from "expo-av";
 
-export default function PrizeModal({ aww, onClose, ShareBtn }) {
+// will prioritize prizes if there are any
+// otherwise will draw from random
+// viewed prizes will be deleted from local storage on modal close
+export default function PrizeModal({ aww, isPrize, onClose, ShareBtn }) {
   const videoRef = React.useRef(null);
 
   if (!aww) return <Text style={{ textAlign: "center" }}>💩</Text>;
@@ -23,7 +26,7 @@ export default function PrizeModal({ aww, onClose, ShareBtn }) {
     >
       <View style={styles.container}>
         <TouchableOpacity
-          onPress={onClose}
+          onPress={() => onClose(isPrize, aww.id)}
           style={{ alignSelf: "flex-start", margin: 8 }}
         >
           <Text style={{ fontSize: 30 }}>X</Text>

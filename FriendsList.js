@@ -1,8 +1,8 @@
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 
-export default function FriendsList({ aww, onClose, currentUser }) {
+export default function FriendsList({ aww, isPrize, onClose, currentUser }) {
   const [selectedFriends, setSelectedFriends] = React.useState([]);
   const [friends, setFriends] = React.useState([]);
   const [error, setError] = React.useState(null);
@@ -10,6 +10,7 @@ export default function FriendsList({ aww, onClose, currentUser }) {
   React.useEffect(() => {
     (async function () {
       try {
+        setError(null);
         const friends = await getFriends(currentUser);
         setFriends(friends);
       } catch (e) {
@@ -21,13 +22,17 @@ export default function FriendsList({ aww, onClose, currentUser }) {
   const shareToFriends = async () => {
     try {
       for (let friend of selectedFriends) {
+        // to maintain the structure (lessen the work on the prize modal render)
+        // passing in the entire media object to store in database
+        // we can revisit if this consumes too much data
         const data = {
-          [aww.id]: aww.is_video
-            ? aww?.crosspost_parent_list?.length > 0
-              ? aww.crosspost_parent_list[0].secure_media.reddit_video
-                  .fallback_url
-              : aww.secure_media?.reddit_video?.fallback_url
-            : aww.url,
+          [aww.id]: aww,
+          // [aww.id]: aww.is_video
+          //   ? aww?.crosspost_parent_list?.length > 0
+          //     ? aww.crosspost_parent_list[0].secure_media.reddit_video
+          //         .fallback_url
+          //     : aww.secure_media?.reddit_video?.fallback_url
+          //   : aww.url,
         };
 
         await fetch(`https://awwtimer.firebaseio.com/prizes/${friend}.json`, {
@@ -39,6 +44,12 @@ export default function FriendsList({ aww, onClose, currentUser }) {
           method: "patch",
           mode: "cors",
         });
+
+        // alert the user share went through
+        // auto redirect to home by dismissing modal
+        Alert.alert("Share successful!", "Your friends will go awwwwww", [
+          { text: "Close", onPress: onClose },
+        ]);
       }
     } catch (err) {
       throw new Error(err);
@@ -64,7 +75,7 @@ export default function FriendsList({ aww, onClose, currentUser }) {
         paddingVertical: 16,
       }}
       data={friends}
-      keyExtractor={(item) => Object.keys(item)[0]}
+      keyExtractor={(item) => item}
       ListEmptyComponent={() => (
         <Text>
           {error && "Sry, we suck and can't find your friends"}
