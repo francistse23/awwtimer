@@ -309,7 +309,7 @@ export default function App() {
             alignItems: "center",
           }}
         >
-          {prizes && (
+          {Object.keys(prizes).length > 0 && (
             <Text>{Object.keys(prizes).length} prizes waiting for you!</Text>
           )}
 
