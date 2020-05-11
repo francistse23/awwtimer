@@ -127,7 +127,7 @@ export default function App() {
 
   const [aww, setAww] = React.useState(null);
 
-  async function login(username = "", password = "") {
+  async function login() {
     try {
       const secureStoreOptions = {
         keychainService: Platform.OS === "ios" ? "iOS" : "Android",
@@ -138,14 +138,6 @@ export default function App() {
         `${appNamespace}username`,
         secureStoreOptions
       );
-
-      // if (!username) {
-      //   let response = await fetch(
-      //     `https://awwtimer.firebaseio.com/users/${username}.json`
-      //   );
-      //   response = await response.json();
-      //   // user =
-      // }
 
       setCurrentUser(user);
     } catch (err) {
