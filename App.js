@@ -38,7 +38,6 @@ const initialState = {
   isSharing: false,
   isCreatingUser: false,
   timerEndDate: null,
-  unsubscribeFromNotifications: () => {},
 };
 
 const appNamespace = "awwtimer-";
@@ -46,8 +45,6 @@ const appNamespace = "awwtimer-";
 function reducer(state, action) {
   switch (action.type) {
     case ACTION_TYPES.RESET:
-      state.unsubscribeFromNotifications();
-
       return initialState;
     case ACTION_TYPES.START_TIME:
       console.log("starting timer");
@@ -70,15 +67,6 @@ function reducer(state, action) {
         body: "Good job! Open your reward and take a break!",
         data: { isTimerDone: true },
       };
-
-      const unsubscribeFromNotifications = Notifications.addListener(
-        (notification) => {
-          console.log("Notification received:", notification);
-          if (notification?.data?.isTimerDone) {
-            dispatch({ type: ACTION_TYPES.TIMER_DONE });
-          }
-        }
-      );
 
       const schedulingOptions = {
         time: timerEndDate,
@@ -104,7 +92,6 @@ function reducer(state, action) {
         isTimerActive: true,
         timer: Math.ceil((timerEndDate - new Date().getTime()) / 1000),
         timerEndDate,
-        unsubscribeFromNotifications,
       };
     case ACTION_TYPES.TIMER_TICK:
       return {
@@ -243,6 +230,16 @@ export default function App() {
 
   React.useEffect(() => {
     login();
+    const unsubscribeFromNotifications = Notifications.addListener(
+      (notification) => {
+        console.log("Notification received:", notification);
+        if (notification?.data?.isTimerDone) {
+          dispatch({ type: ACTION_TYPES.TIMER_DONE });
+        }
+      }
+    );
+
+    return () => unsubscribeFromNotifications();
   }, []);
 
   if (isCreatingUser) {
