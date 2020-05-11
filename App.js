@@ -20,7 +20,6 @@ import * as Permissions from "expo-permissions";
 const ACTION_TYPES = {
   RESET: "RESET",
   START_TIME: "START_TIME",
-  PAUSE_TIME: "PAUSE_TIME",
   TIMER_TICK: "TIMER_TICK",
   TIMER_DONE: "TIMER_DONE",
   COLLECT_PRIZE: "COLLECT_PRIZE",
