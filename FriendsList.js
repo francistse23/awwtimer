@@ -65,67 +65,76 @@ export default function FriendsList({ onClose, currentUser }) {
   };
 
   return (
-    <>
-      <Text>Your friends 😀</Text>
-      <View style={{ flexDirection: "row" }}>
-        <FlatList
-          data={friends}
-          horizontal
-          keyExtractor={(item) => Object.keys(item)[0]}
-          ListEmptyComponent={() => (
-            <Text>
-              {error && "Sry, we suck and can't find your friends"}
-              {!error && "find some friends"}
-            </Text>
-          )}
-          renderItem={({ item }) => {
-            const [friendName] = Object.keys(item);
-
-            return (
-              <TouchableOpacity
-                onPress={() => addFriend(friendName)}
-                style={
-                  selectedFriends.includes(friendName)
-                    ? styles.button
-                    : { ...styles.button, backgroundColor: "lightgray" }
-                }
-              >
-                <Text style={styles.buttonText}>{friendName}</Text>
-              </TouchableOpacity>
-            );
-          }}
-        />
-        <TouchableOpacity
-          disabled={selectedFriends.length < 1}
-          onPress={() => shareToFriends()}
-          style={
-            selectedFriends.length < 1
-              ? { ...styles.button, backgroundColor: "lightgray" }
-              : styles.button
-          }
-        >
-          <Text style={styles.buttonText}>Share</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onClose} style={styles.button}>
-          <Text style={styles.buttonText}>Close</Text>
-        </TouchableOpacity>
-      </View>
-    </>
+    <FlatList
+      contentContainerStyle={{
+        flex: 1,
+        justifyContent: "space-between",
+        paddingVertical: 16,
+      }}
+      data={friends}
+      keyExtractor={(item) => Object.keys(item)[0]}
+      ListEmptyComponent={() => (
+        <Text>
+          {error && "Sry, we suck and can't find your friends"}
+          {!error && "find some friends"}
+        </Text>
+      )}
+      ListFooterComponent={() => (
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            disabled={selectedFriends.length < 1}
+            onPress={() => shareToFriends()}
+            style={
+              selectedFriends.length < 1
+                ? { ...styles.button, backgroundColor: "lightgray" }
+                : styles.button
+            }
+          >
+            <Text style={styles.buttonText}>Share</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onClose} style={styles.button}>
+            <Text style={styles.buttonText}>Close</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+      ListHeaderComponent={() => (
+        <Text style={{ textAlign: "center" }}>Your friends 😀</Text>
+      )}
+      renderItem={({ item }) => {
+        return (
+          <TouchableOpacity
+            onPress={() => addFriend(item)}
+            style={
+              selectedFriends.includes(item)
+                ? styles.button
+                : { ...styles.button, backgroundColor: "lightgray" }
+            }
+          >
+            <Text style={styles.buttonText}>{item}</Text>
+          </TouchableOpacity>
+        );
+      }}
+    />
   );
 }
 
 async function getFriends(currentUser) {
   try {
     console.log(`finding friends for ${currentUser}`);
+
+    // currentUser will log the username with #xxxx
+    // split to get the username only
     let response = await fetch(
-      `https://awwtimer.firebaseio.com/friends/${currentUser}.json`
+      `https://awwtimer.firebaseio.com/friends/${
+        currentUser.split("#")[0]
+      }.json`
     );
 
     let responseJson = await response.json();
 
-    const friends = Object.entries(responseJson)
-      .filter(([username, isFriend]) => Boolean(isFriend))
-      .map(([username, isFriend]) => username);
+    const friends = Object.entries(responseJson).map(([username, isFriend]) => {
+      if (isFriend) return username;
+    });
 
     return friends;
   } catch (error) {
@@ -140,6 +149,7 @@ const styles = StyleSheet.create({
     padding: 12,
     margin: 12,
   },
+  buttonContainer: { flexDirection: "row", justifyContent: "space-between" },
   buttonText: {
     color: "white",
     fontSize: 24,
