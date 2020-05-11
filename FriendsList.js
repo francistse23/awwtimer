@@ -30,20 +30,15 @@ export default function FriendsList({ aww, onClose, currentUser }) {
             : aww.url,
         };
 
-        let res = await fetch(
-          `https://awwtimer.firebaseio.com/prizes/${friend}.json`,
-          {
-            body: JSON.stringify(data),
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data),
-            method: "patch",
-            mode: "cors",
-          }
-        );
-        res = await res.json();
-        console.log("After sharing", res);
+        await fetch(`https://awwtimer.firebaseio.com/prizes/${friend}.json`, {
+          body: JSON.stringify(data),
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+          method: "patch",
+          mode: "cors",
+        });
       }
     } catch (err) {
       throw new Error(err);

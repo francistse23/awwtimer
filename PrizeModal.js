@@ -10,28 +10,6 @@ import {
 } from "react-native";
 import { Video } from "expo-av";
 
-// async function getPrizes() {
-//   try {
-//     let response = await fetch(
-//       `https://awwtimer.firebaseio.com/users/${currentUser}/prizes.json`
-//     );
-
-//     let prizesJson = await response.json();
-
-//     const prizes = Object.entries(prizesJson).flatMap(
-//       ([username, urlsObj]) => {
-//         return Object.values(urlsObj).map((u) => ({
-//           from: username,
-//           url: u,
-//         }));
-//       }
-//     );
-//     setPrizes(prizes);
-//   } catch (error) {
-//     console.error(error);
-//   }
-// }
-
 export default function PrizeModal({ aww, onClose, ShareBtn }) {
   const videoRef = React.useRef(null);
 

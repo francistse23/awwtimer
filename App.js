@@ -1,5 +1,6 @@
 import React, { useState, useReducer } from "react";
 import {
+  AsyncStorage,
   Platform,
   StyleSheet,
   Text,
@@ -9,12 +10,11 @@ import {
 import GestureRecognizer, {
   swipeDirections,
 } from "react-native-swipe-gestures";
-import { Video } from "expo-av";
 import * as SecureStore from "expo-secure-store";
 import SignUpForm from "./SignUpForm";
 import PrizeModal from "./PrizeModal";
 import FriendsList from "./FriendsList";
-import { Notifications, Constants } from "expo";
+import { Notifications } from "expo";
 import * as Permissions from "expo-permissions";
 
 const ACTION_TYPES = {
@@ -124,46 +124,8 @@ function reducer(state, action) {
 export default function App() {
   const [timerState, dispatch] = useReducer(reducer, initialState);
   const [currentUser, setCurrentUser] = useState(null);
-
+  const [prizes, setPrizes] = useState({});
   const [aww, setAww] = React.useState(null);
-
-  async function login() {
-    try {
-      const secureStoreOptions = {
-        keychainService: Platform.OS === "ios" ? "iOS" : "Android",
-      };
-
-      // should return username#code
-      let user = await SecureStore.getItemAsync(
-        `${appNamespace}username`,
-        secureStoreOptions
-      );
-
-      setCurrentUser(user);
-    } catch (err) {
-      throw new Error(err);
-    }
-  }
-
-  React.useEffect(() => {
-    async function getData() {
-      const response = await fetch("https://www.reddit.com/r/aww/hot.json");
-      const data = await response.json();
-      const posts = data?.data?.children?.map((c) => c.data) ?? [];
-
-      const randomIndex = Math.floor(Math.random() * posts.length);
-      const aww = posts[3];
-      // const images = posts.filter((p) => p.url.endsWith(".jpg"));
-
-      setAww(aww);
-    }
-
-    getData();
-  }, []);
-
-  React.useEffect(() => {
-    askForNotificationPermissions();
-  }, []);
 
   const {
     timer,
@@ -188,6 +150,96 @@ export default function App() {
         dispatch({ type: ACTION_TYPES.RESET });
     }
   };
+
+  // https://reactnative.dev/docs/asyncstorage.html
+  // supposed to be deprecated
+  // but expo has issues with the independent package
+  async function getPrizes(user) {
+    try {
+      // await AsyncStorage.removeItem(`${appNamespace}prizes`);
+      // await AsyncStorage.getItem(`${appNamespace}prizes`);
+
+      // prizes from local storage
+      let prizesInStorage = await AsyncStorage.getItem(`${appNamespace}prizes`);
+
+      let response = await fetch(
+        `https://awwtimer.firebaseio.com/prizes/${user.split("#")[0]}.json`
+      );
+
+      // prizes from database
+      let prizesJson = await response.json();
+
+      if (prizesInStorage || prizesJson) {
+        const data =
+          prizesInStorage && prizesJson
+            ? { ...prizesInStorage, ...prizesJson }
+            : prizesInStorage && !prizesJson
+            ? prizesInStorage
+            : prizesJson;
+
+        await AsyncStorage.setItem(
+          `${appNamespace}prizes`,
+          JSON.stringify(data)
+        );
+
+        setPrizes(data);
+
+        // delete prizes from database since it's now transferred to local storage
+        await fetch(
+          `https://awwtimer.firebaseio.com/prizes/${user.split("#")[0]}.json`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+            method: "delete",
+            mode: "cors",
+          }
+        );
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async function login() {
+    try {
+      const secureStoreOptions = {
+        keychainService: Platform.OS === "ios" ? "iOS" : "Android",
+      };
+
+      // should return username#code
+      let user = await SecureStore.getItemAsync(
+        `${appNamespace}username`,
+        secureStoreOptions
+      );
+
+      setCurrentUser(user);
+
+      getPrizes(user);
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
+
+  React.useEffect(() => {
+    async function getData() {
+      const response = await fetch("https://www.reddit.com/r/aww/hot.json");
+      const data = await response.json();
+      const posts = data?.data?.children?.map((c) => c.data) ?? [];
+
+      const randomIndex = Math.floor(Math.random() * posts.length);
+      const aww = posts[3];
+      // const images = posts.filter((p) => p.url.endsWith(".jpg"));
+
+      setAww(aww);
+    }
+
+    getData();
+  }, []);
+
+  React.useEffect(() => {
+    askForNotificationPermissions();
+  }, []);
 
   // get the system time every second so we can display the difference
   // between it and the timerEndDate
@@ -254,6 +306,10 @@ export default function App() {
             alignItems: "center",
           }}
         >
+          {prizes && (
+            <Text>{Object.keys(prizes).length} prizes waiting for you</Text>
+          )}
+
           {!isTimerStarted && !isTimerDone && (
             <>
               <View
