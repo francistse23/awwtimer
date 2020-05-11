@@ -2,7 +2,7 @@ import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 
-export default function FriendsList({ onClose, currentUser }) {
+export default function FriendsList({ aww, onClose, currentUser }) {
   const [selectedFriends, setSelectedFriends] = React.useState([]);
   const [friends, setFriends] = React.useState([]);
   const [error, setError] = React.useState(null);
@@ -21,32 +21,29 @@ export default function FriendsList({ onClose, currentUser }) {
   const shareToFriends = async () => {
     try {
       for (let friend of selectedFriends) {
-        const data = [
-          aww.is_video ? aww.secure_media?.reddit_video?.dash_url : aww.url,
-          // following structure will throw an error
-          // {
-          //   [aww.id]: aww.is_video
-          //     ? aww.secure_media?.reddit_video?.dash_url
-          //     : aww.url,
-          // },
-        ];
+        const data = {
+          [aww.id]: aww.is_video
+            ? aww?.crosspost_parent_list?.length > 0
+              ? aww.crosspost_parent_list[0].secure_media.reddit_video
+                  .fallback_url
+              : aww.secure_media?.reddit_video?.fallback_url
+            : aww.url,
+        };
 
         let res = await fetch(
-          `https://awwtimer.firebaseio.com/users/${friend}/prizes.json`,
+          `https://awwtimer.firebaseio.com/prizes/${friend}.json`,
           {
             body: JSON.stringify(data),
             headers: {
               "Content-Type": "application/json",
             },
-            // dont use post or put
-            // post, firebase will auto-generate a key/id and use that as the new user object's key, too chaotic
-            // put, replaces all users (effectively wiping all users)
+            body: JSON.stringify(data),
             method: "patch",
             mode: "cors",
           }
         );
-        // res = await res.json();
-        // console.log("After sharing", res);
+        res = await res.json();
+        console.log("After sharing", res);
       }
     } catch (err) {
       throw new Error(err);
@@ -92,13 +89,18 @@ export default function FriendsList({ onClose, currentUser }) {
           >
             <Text style={styles.buttonText}>Share</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={onClose} style={styles.button}>
+          <TouchableOpacity
+            onPress={onClose}
+            style={{ ...styles.button, backgroundColor: "lightgray" }}
+          >
             <Text style={styles.buttonText}>Close</Text>
           </TouchableOpacity>
         </View>
       )}
       ListHeaderComponent={() => (
-        <Text style={{ textAlign: "center" }}>Your friends 😀</Text>
+        <Text style={{ fontSize: 24, textAlign: "center" }}>
+          Your friends 😀
+        </Text>
       )}
       renderItem={({ item }) => {
         return (

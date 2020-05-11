@@ -302,6 +302,7 @@ export default function App() {
 
           {isSharing && (
             <FriendsList
+              aww={aww}
               onClose={() => dispatch({ type: ACTION_TYPES.RESET })}
               currentUser={currentUser}
             />
