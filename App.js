@@ -423,6 +423,7 @@ export default function App() {
         </ScrollView>
         {!isTimerStarted && (
           <FriendsList
+            currentUser={currentUser.split("#")[0]}
             error={error}
             friends={friends}
             isViewing={true}

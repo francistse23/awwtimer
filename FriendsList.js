@@ -2,9 +2,9 @@ import React from "react";
 import {
   Alert,
   Dimensions,
-  Image,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -12,6 +12,7 @@ import { FlatList } from "react-native-gesture-handler";
 
 export default function FriendsList({
   aww = {},
+  currentUser,
   error,
   friends,
   isViewing = false,
@@ -21,6 +22,38 @@ export default function FriendsList({
   const [addingFriend, setAddingFriend] = React.useState(false);
   const [friendName, setFriendName] = React.useState("");
   const [selectedFriends, setSelectedFriends] = React.useState([]);
+  const [addError, setAddError] = React.useState(null);
+
+  const addFriend = async (friendName) => {
+    try {
+      const [name, code] = friendName.split("#");
+
+      const friendCode = await fetch(
+        `https://awwtimer.firebaseio.com/users/${name}.json`
+      );
+
+      if (friendCode === code) {
+        const data = { [name]: true };
+
+        await fetch(
+          `https://awwtimer.firebaseio.com/friends/${currentUser}.json`,
+          {
+            body: JSON.stringify(data),
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+            method: "patch",
+            mode: "cors",
+          }
+        );
+      } else {
+        // throw error, mismatch code
+      }
+    } catch (e) {
+      throw new Error(e);
+    }
+  };
 
   const addFriendToShare = (friend) => {
     if (selectedFriends.includes(friend)) {
@@ -111,37 +144,43 @@ export default function FriendsList({
             width: Dimensions.get("window").width * 0.8,
           }}
         >
-          <View
-            style={{
-              alignItems: "center",
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
+          <View style={styles.horizontalContainer}>
             <Text style={{ fontSize: 24, textAlign: "center" }}>
               Your friends 😀
             </Text>
             {isViewing && (
-              <TouchableOpacity style={{ backgroundColor: "lightgray" }}>
-                <Image
-                  source={{ uri: "./assets/add.png" }}
-                  style={{ height: 32, width: 32 }}
-                />
+              <TouchableOpacity
+                onPress={() => setAddingFriend((addingFriend) => !addingFriend)}
+                style={{
+                  alignItems: "center",
+                  backgroundColor: "#679b9b",
+                  borderRadius: 16,
+                  justifyContent: "center",
+                  height: 32,
+                  width: 32,
+                }}
+              >
+                <Text style={{ fontSize: 32, color: "white" }}>
+                  {addingFriend ? "-" : "+"}
+                </Text>
               </TouchableOpacity>
             )}
           </View>
 
           {addingFriend && (
-            <View>
+            <View style={styles.horizontalContainer}>
               <TextInput
                 onChangeText={(text) => setFriendName(text)}
+                placeholder="e.g. arcsecond#7125"
+                style={styles.input}
                 value={friendName}
               />
 
-              <TouchableOpacity style={styles.button}>
-                <Text style={styles.buttonText}>{`Add ${
-                  addingFriend ? friendName : "Friend"
-                }`}</Text>
+              <TouchableOpacity
+                disabled={!friendName && friendName.split("#").length < 2}
+                style={{ ...styles.button, flex: 1 }}
+              >
+                <Text style={styles.buttonText}>Add</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -179,5 +218,20 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 24,
     textAlign: "center",
+  },
+  horizontalContainer: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginVertical: 12,
+  },
+  input: {
+    backgroundColor: "white",
+    borderColor: "#679b9b",
+    borderRadius: 5,
+    borderWidth: 2,
+    flex: 2,
+    height: 50,
+    padding: 6,
   },
 });
