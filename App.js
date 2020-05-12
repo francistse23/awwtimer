@@ -2,6 +2,7 @@ import React, { useState, useReducer } from "react";
 import {
   AsyncStorage,
   Platform,
+  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -298,7 +299,7 @@ export default function App() {
       onSwipe={(direction) => handleSwipe(direction)}
       style={{ flex: 1 }}
     >
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <Text style={{ fontSize: 36, paddingHorizontal: 12 }}>
           {`( ∩ˇωˇ∩)♡\nかわいい\nタイマー`}
         </Text>
@@ -415,7 +416,7 @@ export default function App() {
             )}
           </View>
         )}
-      </View>
+      </SafeAreaView>
     </GestureRecognizer>
   );
 }
