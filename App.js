@@ -2,7 +2,9 @@ import React, { useState, useReducer } from "react";
 import {
   AsyncStorage,
   Platform,
+  RefreshControl,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -126,6 +128,7 @@ export default function App() {
   const [timerState, dispatch] = useReducer(reducer, initialState);
   const [currentUser, setCurrentUser] = useState(null);
   const [prizes, setPrizes] = useState({});
+  const [refreshing, setRefreshing] = useState(false);
   const [aww, setAww] = React.useState(null);
 
   const {
@@ -305,12 +308,22 @@ export default function App() {
         <Text style={{ fontSize: 36, paddingHorizontal: 12 }}>
           {`( ∩ˇωˇ∩)♡\nかわいい\nタイマー`}
         </Text>
-        <View
-          style={{
+        <ScrollView
+          contentContainerStyle={{
             flex: 1,
             justifyContent: "center",
             alignItems: "center",
           }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => {
+                setRefreshing(true);
+                getPrizes(currentUser.split("#")[0]);
+                setRefreshing(false);
+              }}
+            />
+          }
         >
           {Object.keys(prizes).length > 0 && (
             <Text>{Object.keys(prizes).length} prizes waiting for you!</Text>
@@ -379,7 +392,7 @@ export default function App() {
               style={styles.altText}
             >{`connect with friends as ${currentUser}`}</Text>
           )}
-        </View>
+        </ScrollView>
         {isModalVisible && (
           <View style={{ flex: 4, width: "100%" }}>
             {isTimerDone && isModalVisible && (
