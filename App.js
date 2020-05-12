@@ -411,7 +411,7 @@ export default function App() {
                   : aww
               }
               error={error}
-              isPrize={Object.keys(prizes).length > 0 ? true : false}
+              friends={friends}
               onClose={() => dispatch({ type: ACTION_TYPES.RESET })}
             />
           )}
@@ -424,9 +424,18 @@ export default function App() {
         {!isTimerStarted && (
           <FriendsList
             error={error}
+            friends={friends}
             isViewing={true}
-            refreshing={refreshing}
-            onRefresh={() => getFriends(currentUser)}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={() => {
+                  setRefreshing(true);
+                  getFriends(currentUser.split("#")[0]);
+                  setRefreshing(false);
+                }}
+              />
+            }
           />
         )}
       </ViewPager>

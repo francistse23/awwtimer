@@ -1,6 +1,7 @@
 import React from "react";
 import {
   Alert,
+  Dimensions,
   Image,
   StyleSheet,
   Text,
@@ -15,8 +16,7 @@ export default function FriendsList({
   friends,
   isViewing = false,
   onClose,
-  refreshing = false,
-  onRefresh = null,
+  refreshControl,
 }) {
   const [addingFriend, setAddingFriend] = React.useState(false);
   const [friendName, setFriendName] = React.useState("");
@@ -70,8 +70,9 @@ export default function FriendsList({
       contentContainerStyle={{
         alignItems: "center",
         flex: 1,
-        justifyContent: "space-between",
+        justifyContent: "space-around",
         paddingVertical: isViewing ? 48 : 16,
+        width: Dimensions.get("window").width,
       }}
       data={friends}
       keyExtractor={(item) => item}
@@ -81,73 +82,79 @@ export default function FriendsList({
           {!error && "find some friends"}
         </Text>
       )}
-      ListFooterComponent={
-        () =>
-          !isViewing && (
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                disabled={selectedFriends.length < 1}
-                onPress={() => shareToFriends()}
-                style={
-                  selectedFriends.length < 1
-                    ? { ...styles.button, backgroundColor: "lightgray" }
-                    : styles.button
-                }
-              >
-                <Text style={styles.buttonText}>Share</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={onClose}
-                style={{ ...styles.button, backgroundColor: "lightgray" }}
-              >
-                <Text style={styles.buttonText}>Close</Text>
-              </TouchableOpacity>
-            </View>
-          )
-
-        // <View>
-        //   {addingFriend && (
-        //     <TextInput
-        //       onChangeText={(text) => setFriendName(text)}
-        //       value={friendName}
-        //     />
-        //   )}
-        //   <TouchableOpacity style={styles.button}>
-        //     <Text style={styles.buttonText}>{`Add ${
-        //       addingFriend ? friendName : "Friend"
-        //     }`}</Text>
-        //   </TouchableOpacity>
-        // </View>
+      ListFooterComponent={() =>
+        !isViewing && (
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              disabled={selectedFriends.length < 1}
+              onPress={() => shareToFriends()}
+              style={
+                selectedFriends.length < 1
+                  ? { ...styles.button, backgroundColor: "lightgray" }
+                  : styles.button
+              }
+            >
+              <Text style={styles.buttonText}>Share</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={onClose}
+              style={{ ...styles.button, backgroundColor: "lightgray" }}
+            >
+              <Text style={styles.buttonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        )
       }
       ListHeaderComponent={() => (
         <View
           style={{
-            alignItems: "center",
-            flexDirection: "row",
-            justifyContent: "space-between",
+            width: Dimensions.get("window").width * 0.8,
           }}
         >
-          <Text style={{ fontSize: 24, textAlign: "center" }}>
-            Your friends 😀
-          </Text>
-          {isViewing && (
-            <TouchableOpacity>
-              <Image
-                source={{ uri: "./assets/add.png" }}
-                style={{ height: 32, width: 32 }}
+          <View
+            style={{
+              alignItems: "center",
+              flexDirection: "row",
+              justifyContent: "space-between",
+            }}
+          >
+            <Text style={{ fontSize: 24, textAlign: "center" }}>
+              Your friends 😀
+            </Text>
+            {isViewing && (
+              <TouchableOpacity style={{ backgroundColor: "lightgray" }}>
+                <Image
+                  source={{ uri: "./assets/add.png" }}
+                  style={{ height: 32, width: 32 }}
+                />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {addingFriend && (
+            <View>
+              <TextInput
+                onChangeText={(text) => setFriendName(text)}
+                value={friendName}
               />
-            </TouchableOpacity>
+
+              <TouchableOpacity style={styles.button}>
+                <Text style={styles.buttonText}>{`Add ${
+                  addingFriend ? friendName : "Friend"
+                }`}</Text>
+              </TouchableOpacity>
+            </View>
           )}
         </View>
       )}
-      refreshing={refreshing}
-      onRefresh={() => onRefresh()}
+      nestedScrollEnabled
+      refreshControl={refreshControl}
       renderItem={({ item }) => {
         return (
           <TouchableOpacity
-            onPress={() => addFriendToShare(item)}
+            onPress={() => (!isViewing ? addFriendToShare(item) : null)}
             style={
-              selectedFriends.includes(item)
+              selectedFriends.includes(item) || isViewing
                 ? styles.button
                 : { ...styles.button, backgroundColor: "lightgray" }
             }
@@ -165,7 +172,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#679b9b",
     borderRadius: 10,
     padding: 12,
-    margin: 12,
+    width: 200,
   },
   buttonContainer: { flexDirection: "row", justifyContent: "space-between" },
   buttonText: {
