@@ -42,7 +42,6 @@ export default function FriendsList({
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify(data),
             method: "patch",
             mode: "cors",
           }
@@ -82,7 +81,6 @@ export default function FriendsList({
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(data),
           method: "patch",
           mode: "cors",
         });
