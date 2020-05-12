@@ -160,7 +160,9 @@ export default function App() {
       // await AsyncStorage.removeItem(`${appNamespace}prizes`);
 
       // prizes from local storage
-      let prizesInStorage = await AsyncStorage.getItem(`${appNamespace}prizes`);
+      let prizesInStorage = JSON.parse(
+        await AsyncStorage.getItem(`${appNamespace}prizes`)
+      );
 
       console.log("prizes in storage", prizesInStorage);
 
