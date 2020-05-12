@@ -95,7 +95,7 @@ export default function SignUpForm({ onUserCreated }) {
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: "royalblue",
+    backgroundColor: "#679b9b",
     borderRadius: 10,
     padding: 12,
     margin: 12,

@@ -3,13 +3,13 @@ import {
   AsyncStorage,
   Platform,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import ViewPager from "@react-native-community/viewpager";
 import GestureRecognizer, {
   swipeDirections,
 } from "react-native-swipe-gestures";
@@ -127,9 +127,11 @@ function reducer(state, action) {
 export default function App() {
   const [timerState, dispatch] = useReducer(reducer, initialState);
   const [currentUser, setCurrentUser] = useState(null);
+  const [friends, setFriends] = React.useState([]);
   const [prizes, setPrizes] = useState({});
   const [refreshing, setRefreshing] = useState(false);
   const [aww, setAww] = React.useState(null);
+  const [error, setError] = React.useState(null);
 
   const {
     timer,
@@ -155,6 +157,33 @@ export default function App() {
     }
   };
 
+  async function getFriends(currentUser) {
+    try {
+      setError(null);
+      console.log(`finding friends for ${currentUser}`);
+
+      // currentUser will log the username with #xxxx
+      // split to get the username only
+      let response = await fetch(
+        `https://awwtimer.firebaseio.com/friends/${
+          currentUser.split("#")[0]
+        }.json`
+      );
+
+      let responseJson = await response.json();
+
+      const friends = Object.entries(responseJson).map(
+        ([username, isFriend]) => {
+          if (isFriend) return username;
+        }
+      );
+
+      setFriends(friends);
+    } catch (error) {
+      setError("could not get friends", error);
+    }
+  }
+
   // https://reactnative.dev/docs/asyncstorage.html
   // supposed to be deprecated
   // but expo has issues with the independent package
@@ -167,7 +196,7 @@ export default function App() {
         await AsyncStorage.getItem(`${appNamespace}prizes`)
       );
 
-      console.log("prizes in storage", prizesInStorage);
+      // console.log("prizes in storage", prizesInStorage);
 
       // prizes from database
       let response = await fetch(
@@ -176,7 +205,7 @@ export default function App() {
 
       let prizesJson = await response.json();
 
-      console.log("prizes from db", prizesJson);
+      // console.log("prizes from db", prizesJson);
 
       if (prizesInStorage || prizesJson) {
         const data =
@@ -223,7 +252,7 @@ export default function App() {
       );
 
       setCurrentUser(user);
-
+      getFriends(user);
       getPrizes(user);
     } catch (err) {
       throw new Error(err);
@@ -250,6 +279,20 @@ export default function App() {
     askForNotificationPermissions();
   }, []);
 
+  React.useEffect(() => {
+    login();
+    const unsubscribeFromNotifications = Notifications.addListener(
+      (notification) => {
+        console.log("Notification received:", notification);
+        if (notification?.data?.isTimerDone) {
+          dispatch({ type: ACTION_TYPES.TIMER_DONE });
+        }
+      }
+    );
+
+    return () => unsubscribeFromNotifications.remove();
+  }, []);
+
   // get the system time every second so we can display the difference
   // between it and the timerEndDate
   React.useEffect(() => {
@@ -269,20 +312,6 @@ export default function App() {
 
     return () => clearInterval(runTimer);
   }, [timerEndDate]);
-
-  React.useEffect(() => {
-    login();
-    const unsubscribeFromNotifications = Notifications.addListener(
-      (notification) => {
-        console.log("Notification received:", notification);
-        if (notification?.data?.isTimerDone) {
-          dispatch({ type: ACTION_TYPES.TIMER_DONE });
-        }
-      }
-    );
-
-    return () => unsubscribeFromNotifications.remove();
-  }, []);
 
   if (isCreatingUser) {
     return (
@@ -304,16 +333,12 @@ export default function App() {
       onSwipe={(direction) => handleSwipe(direction)}
       style={{ flex: 1 }}
     >
-      <SafeAreaView style={styles.container}>
-        <Text style={{ fontSize: 36, paddingHorizontal: 12 }}>
-          {`( ∩ˇωˇ∩)♡\nかわいい\nタイマー`}
-        </Text>
+      {/* View pager provides the swiping/carousel like function */}
+      {/* https://github.com/react-native-community/react-native-viewpager */}
+      <ViewPager initialPage={0} style={styles.container}>
         <ScrollView
-          contentContainerStyle={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-          }}
+          contentContainerStyle={styles.viewContainer}
+          key="main"
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -325,6 +350,9 @@ export default function App() {
             />
           }
         >
+          <Text style={{ fontSize: 36, paddingHorizontal: 12 }}>
+            {`( ∩ˇωˇ∩)♡\nかわいい\nタイマー`}
+          </Text>
           {Object.keys(prizes).length > 0 && (
             <Text>{Object.keys(prizes).length} prizes waiting for you!</Text>
           )}
@@ -382,9 +410,9 @@ export default function App() {
                   ? prizes[Object.keys(prizes)[0]]
                   : aww
               }
+              error={error}
               isPrize={Object.keys(prizes).length > 0 ? true : false}
               onClose={() => dispatch({ type: ACTION_TYPES.RESET })}
-              currentUser={currentUser}
             />
           )}
           {currentUser && !isTimerStarted && (
@@ -393,45 +421,55 @@ export default function App() {
             >{`connect with friends as ${currentUser}`}</Text>
           )}
         </ScrollView>
-        {isModalVisible && (
-          <View style={{ flex: 4, width: "100%" }}>
-            {isTimerDone && isModalVisible && (
-              <PrizeModal
-                aww={
-                  Object.keys(prizes).length > 0
-                    ? prizes[Object.keys(prizes)[0]]
-                    : aww
-                }
-                isPrize={Object.keys(prizes).length > 0 ? true : false}
-                onClose={async (isPrize, prizeId) => {
-                  if (isPrize) {
-                    delete prizes[prizeId];
-                    if (Object.keys(prizes).length > 0) {
-                      await AsyncStorage.setItem(
-                        `${appNamespace}prizes`,
-                        JSON.stringify(prizes)
-                      );
-                    } else {
-                      await AsyncStorage.removeItem(`${appNamespace}prizes`);
-                    }
-                  }
-                  dispatch({ type: ACTION_TYPES.RESET });
-                }}
-                ShareBtn={() => (
-                  <TouchableOpacity
-                    onPress={() => dispatch({ type: ACTION_TYPES.SHARE_PRIZE })}
-                    style={styles.button}
-                  >
-                    <Text style={{ color: "white", fontSize: 18 }}>
-                      Share ( because you care ʕ๑•ᴥ•ʔ )
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              />
-            )}
-          </View>
+        {!isTimerStarted && (
+          <FriendsList
+            error={error}
+            isViewing={true}
+            refreshing={refreshing}
+            onRefresh={() => getFriends(currentUser)}
+          />
         )}
-      </SafeAreaView>
+      </ViewPager>
+
+      {/* Prize Modal */}
+      {isModalVisible && (
+        <View style={{ flex: 4, width: "100%" }}>
+          {isTimerDone && isModalVisible && (
+            <PrizeModal
+              aww={
+                Object.keys(prizes).length > 0
+                  ? prizes[Object.keys(prizes)[0]]
+                  : aww
+              }
+              isPrize={Object.keys(prizes).length > 0 ? true : false}
+              onClose={async (isPrize, prizeId) => {
+                if (isPrize) {
+                  delete prizes[prizeId];
+                  if (Object.keys(prizes).length > 0) {
+                    await AsyncStorage.setItem(
+                      `${appNamespace}prizes`,
+                      JSON.stringify(prizes)
+                    );
+                  } else {
+                    await AsyncStorage.removeItem(`${appNamespace}prizes`);
+                  }
+                }
+                dispatch({ type: ACTION_TYPES.RESET });
+              }}
+              ShareBtn={() => (
+                <TouchableOpacity
+                  onPress={() => dispatch({ type: ACTION_TYPES.SHARE_PRIZE })}
+                  style={styles.button}
+                >
+                  <Text style={{ color: "white", fontSize: 18 }}>
+                    Share ( because you care ʕ๑•ᴥ•ʔ )
+                  </Text>
+                </TouchableOpacity>
+              )}
+            />
+          )}
+        </View>
+      )}
     </GestureRecognizer>
   );
 }
@@ -508,6 +546,10 @@ const TimerView = ({ timer }) => {
 };
 
 const styles = StyleSheet.create({
+  altText: {
+    color: "#333",
+    fontWeight: "300",
+  },
   button: {
     backgroundColor: "#679b9b",
     borderRadius: 10,
@@ -526,7 +568,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#ffb6b6",
     flex: 1,
-    paddingVertical: 48,
   },
   input: {
     borderColor: "black",
@@ -536,9 +577,11 @@ const styles = StyleSheet.create({
     padding: 8,
     width: "60%",
   },
-  altText: {
-    color: "#333",
-    fontWeight: "300",
+  viewContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 48,
   },
 });
 

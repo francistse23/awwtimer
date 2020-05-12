@@ -1,23 +1,37 @@
 import React from "react";
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 
-export default function FriendsList({ aww, isPrize, onClose, currentUser }) {
+export default function FriendsList({
+  aww = {},
+  error,
+  friends,
+  isViewing = false,
+  onClose,
+  refreshing = false,
+  onRefresh = null,
+}) {
+  const [addingFriend, setAddingFriend] = React.useState(false);
+  const [friendName, setFriendName] = React.useState("");
   const [selectedFriends, setSelectedFriends] = React.useState([]);
-  const [friends, setFriends] = React.useState([]);
-  const [error, setError] = React.useState(null);
 
-  React.useEffect(() => {
-    (async function () {
-      try {
-        setError(null);
-        const friends = await getFriends(currentUser);
-        setFriends(friends);
-      } catch (e) {
-        setError(e);
-      }
-    })();
-  }, []);
+  const addFriendToShare = (friend) => {
+    if (selectedFriends.includes(friend)) {
+      let temp = [...selectedFriends];
+      temp.splice(selectedFriends.indexOf(friend), 1);
+
+      setSelectedFriends(temp);
+    } else {
+      setSelectedFriends((selectedFriends) => [...selectedFriends, friend]);
+    }
+  };
 
   const shareToFriends = async () => {
     try {
@@ -25,14 +39,9 @@ export default function FriendsList({ aww, isPrize, onClose, currentUser }) {
         // to maintain the structure (lessen the work on the prize modal render)
         // passing in the entire media object to store in database
         // we can revisit if this consumes too much data
+        // should we keep track of who sent the prize?
         const data = {
           [aww.id]: aww,
-          // [aww.id]: aww.is_video
-          //   ? aww?.crosspost_parent_list?.length > 0
-          //     ? aww.crosspost_parent_list[0].secure_media.reddit_video
-          //         .fallback_url
-          //     : aww.secure_media?.reddit_video?.fallback_url
-          //   : aww.url,
         };
 
         await fetch(`https://awwtimer.firebaseio.com/prizes/${friend}.json`, {
@@ -56,23 +65,13 @@ export default function FriendsList({ aww, isPrize, onClose, currentUser }) {
     }
   };
 
-  const addFriend = (friend) => {
-    if (selectedFriends.includes(friend)) {
-      let temp = [...selectedFriends];
-      temp.splice(selectedFriends.indexOf(friend), 1);
-
-      setSelectedFriends(temp);
-    } else {
-      setSelectedFriends((selectedFriends) => [...selectedFriends, friend]);
-    }
-  };
-
   return (
     <FlatList
       contentContainerStyle={{
+        alignItems: "center",
         flex: 1,
         justifyContent: "space-between",
-        paddingVertical: 16,
+        paddingVertical: isViewing ? 48 : 16,
       }}
       data={friends}
       keyExtractor={(item) => item}
@@ -82,36 +81,71 @@ export default function FriendsList({ aww, isPrize, onClose, currentUser }) {
           {!error && "find some friends"}
         </Text>
       )}
-      ListFooterComponent={() => (
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            disabled={selectedFriends.length < 1}
-            onPress={() => shareToFriends()}
-            style={
-              selectedFriends.length < 1
-                ? { ...styles.button, backgroundColor: "lightgray" }
-                : styles.button
-            }
-          >
-            <Text style={styles.buttonText}>Share</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={onClose}
-            style={{ ...styles.button, backgroundColor: "lightgray" }}
-          >
-            <Text style={styles.buttonText}>Close</Text>
-          </TouchableOpacity>
+      ListFooterComponent={
+        () =>
+          !isViewing && (
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                disabled={selectedFriends.length < 1}
+                onPress={() => shareToFriends()}
+                style={
+                  selectedFriends.length < 1
+                    ? { ...styles.button, backgroundColor: "lightgray" }
+                    : styles.button
+                }
+              >
+                <Text style={styles.buttonText}>Share</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={onClose}
+                style={{ ...styles.button, backgroundColor: "lightgray" }}
+              >
+                <Text style={styles.buttonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          )
+
+        // <View>
+        //   {addingFriend && (
+        //     <TextInput
+        //       onChangeText={(text) => setFriendName(text)}
+        //       value={friendName}
+        //     />
+        //   )}
+        //   <TouchableOpacity style={styles.button}>
+        //     <Text style={styles.buttonText}>{`Add ${
+        //       addingFriend ? friendName : "Friend"
+        //     }`}</Text>
+        //   </TouchableOpacity>
+        // </View>
+      }
+      ListHeaderComponent={() => (
+        <View
+          style={{
+            alignItems: "center",
+            flexDirection: "row",
+            justifyContent: "space-between",
+          }}
+        >
+          <Text style={{ fontSize: 24, textAlign: "center" }}>
+            Your friends 😀
+          </Text>
+          {isViewing && (
+            <TouchableOpacity>
+              <Image
+                source={{ uri: "./assets/add.png" }}
+                style={{ height: 32, width: 32 }}
+              />
+            </TouchableOpacity>
+          )}
         </View>
       )}
-      ListHeaderComponent={() => (
-        <Text style={{ fontSize: 24, textAlign: "center" }}>
-          Your friends 😀
-        </Text>
-      )}
+      refreshing={refreshing}
+      onRefresh={() => onRefresh()}
       renderItem={({ item }) => {
         return (
           <TouchableOpacity
-            onPress={() => addFriend(item)}
+            onPress={() => addFriendToShare(item)}
             style={
               selectedFriends.includes(item)
                 ? styles.button
@@ -126,33 +160,9 @@ export default function FriendsList({ aww, isPrize, onClose, currentUser }) {
   );
 }
 
-async function getFriends(currentUser) {
-  try {
-    console.log(`finding friends for ${currentUser}`);
-
-    // currentUser will log the username with #xxxx
-    // split to get the username only
-    let response = await fetch(
-      `https://awwtimer.firebaseio.com/friends/${
-        currentUser.split("#")[0]
-      }.json`
-    );
-
-    let responseJson = await response.json();
-
-    const friends = Object.entries(responseJson).map(([username, isFriend]) => {
-      if (isFriend) return username;
-    });
-
-    return friends;
-  } catch (error) {
-    throw new Error("could not get friends");
-  }
-}
-
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: "royalblue",
+    backgroundColor: "#679b9b",
     borderRadius: 10,
     padding: 12,
     margin: 12,
