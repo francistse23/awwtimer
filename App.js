@@ -245,15 +245,22 @@ export default function App() {
         keychainService: Platform.OS === "ios" ? "iOS" : "Android",
       };
 
+      // await SecureStore.deleteItemAsync(
+      //   `${appNamespace}username`,
+      //   secureStoreOptions
+      // );
+
       // should return username#code
       let user = await SecureStore.getItemAsync(
         `${appNamespace}username`,
         secureStoreOptions
       );
 
-      setCurrentUser(user);
-      getFriends(user);
-      getPrizes(user);
+      if (user) {
+        setCurrentUser(user);
+        getFriends(user);
+        getPrizes(user);
+      }
     } catch (err) {
       throw new Error(err);
     }
@@ -421,7 +428,7 @@ export default function App() {
             >{`connect with friends as ${currentUser}`}</Text>
           )}
         </ScrollView>
-        {!isTimerStarted && (
+        {!isTimerStarted && currentUser && (
           <FriendsList
             currentUser={currentUser.split("#")[0]}
             error={error}
