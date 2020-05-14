@@ -322,7 +322,7 @@ export default function App() {
 
   if (isCreatingUser) {
     return (
-      <View style={styles.container}>
+      <View style={styles.signUpContainer}>
         <Text style={{ fontSize: 12 }}>Create a user</Text>
         <SignUpForm
           onUserCreated={(username) => {
@@ -433,6 +433,7 @@ export default function App() {
             currentUser={currentUser?.split("#")[0]}
             error={error}
             friends={friends}
+            getFriends={getFriends(currentUser?.split("#")[0])}
             isViewing={true}
             refreshControl={
               <RefreshControl
@@ -593,6 +594,12 @@ const styles = StyleSheet.create({
     margin: 8,
     padding: 8,
     width: "60%",
+  },
+  signUpContainer: {
+    alignItems: "center",
+    backgroundColor: "#ffb6b6",
+    flex: 1,
+    paddingVertical: 48,
   },
   viewContainer: {
     flex: 1,

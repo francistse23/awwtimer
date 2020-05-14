@@ -5,6 +5,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  View,
 } from "react-native";
 import * as SecureStore from "expo-secure-store";
 
@@ -74,7 +75,7 @@ export default function SignUpForm({ onUserCreated }) {
   };
 
   return (
-    <>
+    <View style={{ paddingVertical: 50 }}>
       <TextInput
         onChangeText={(text) => setUsername(text)}
         placeholder="username"
@@ -89,7 +90,7 @@ export default function SignUpForm({ onUserCreated }) {
       >
         <Text style={styles.buttonText}>Create User :)</Text>
       </TouchableOpacity>
-    </>
+    </View>
   );
 }
 
@@ -111,6 +112,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     margin: 8,
     padding: 8,
-    width: "60%",
+    width: 200,
   },
 });
