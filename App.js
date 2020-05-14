@@ -166,7 +166,7 @@ export default function App() {
       // split to get the username only
       let response = await fetch(
         `https://awwtimer.firebaseio.com/friends/${
-          currentUser.split("#")[0]
+          currentUser?.split("#")[0]
         }.json`
       );
 
@@ -351,7 +351,7 @@ export default function App() {
               refreshing={refreshing}
               onRefresh={() => {
                 setRefreshing(true);
-                getPrizes(currentUser.split("#")[0]);
+                getPrizes(currentUser?.split("#")[0]);
                 setRefreshing(false);
               }}
             />
@@ -430,7 +430,7 @@ export default function App() {
         </ScrollView>
         {!isTimerStarted && currentUser && (
           <FriendsList
-            currentUser={currentUser.split("#")[0]}
+            currentUser={currentUser?.split("#")[0]}
             error={error}
             friends={friends}
             isViewing={true}
@@ -439,7 +439,7 @@ export default function App() {
                 refreshing={refreshing}
                 onRefresh={() => {
                   setRefreshing(true);
-                  getFriends(currentUser.split("#")[0]);
+                  getFriends(currentUser?.split("#")[0]);
                   setRefreshing(false);
                 }}
               />
