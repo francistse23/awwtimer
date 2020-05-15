@@ -82,6 +82,7 @@ export default function SignUpForm({ onUserCreated }) {
       <TextInput
         onChangeText={(text) => setUsername(text)}
         placeholder="username"
+        placeholderTextColor="#679b9b"
         style={styles.input}
         value={username}
       />
@@ -107,9 +108,11 @@ export default function SignUpForm({ onUserCreated }) {
 const styles = StyleSheet.create({
   button: {
     backgroundColor: "#679b9b",
+    borderColor: "white",
     borderRadius: 10,
-    padding: 12,
+    borderWidth: 3,
     margin: 12,
+    padding: 12,
   },
   buttonText: {
     color: "white",
@@ -117,9 +120,10 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   input: {
-    borderColor: "black",
-    borderRadius: 6,
-    borderWidth: 1,
+    backgroundColor: "transparent",
+    borderBottomWidth: 2,
+    borderColor: "#679b9b",
+    borderRadius: 5,
     fontSize: 20,
     margin: 16,
     padding: 8,

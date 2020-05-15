@@ -43,7 +43,7 @@ export const ChooseTime = ({ dispatch }) => (
       style={[
         styles.button,
         {
-          transform: [{ rotate: "-9deg" }],
+          transform: [{ rotate: "-2deg" }],
         },
       ]}
     >
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     borderColor: "white",
     borderWidth: 3,
     padding: 12,
-    margin: 30,
+    margin: 18,
   },
   buttonText: {
     color: "white",

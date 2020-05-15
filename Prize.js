@@ -1,34 +1,38 @@
 import React from "react";
-import {
-  Dimensions,
-  Image,
-  Modal,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Dimensions, Image, StyleSheet, Text, View } from "react-native";
 import { Video } from "expo-av";
+import GestureRecognizer, {
+  swipeDirections,
+} from "react-native-swipe-gestures";
 
 // will prioritize prizes if there are any
 // otherwise will draw from random
-// viewed prizes will be deleted from local storage on modal close
-export default function PrizeModal({ aww, isPrize, onClose, ShareBtn }) {
+// viewed prizes will be deleted from local storage on close
+export default function Prize({ aww, isPrize, onClose, ShareBtn }) {
   const videoRef = React.useRef(null);
 
+  const config = {
+    velocityThreshold: 0.3,
+    directionalOffsetThreshold: 80,
+  };
+
+  const handleSwipe = (gestureName) => {
+    const { SWIPE_RIGHT } = swipeDirections;
+
+    switch (gestureName) {
+      case SWIPE_RIGHT:
+        onClose(isPrize, aww.id);
+    }
+  };
+
   if (!aww) return <Text style={{ textAlign: "center" }}>💩</Text>;
-
-  // remove modal
   return (
-    <Modal statusBarTranslucent={false} visible={true}>
+    <GestureRecognizer
+      config={config}
+      onSwipe={(direction) => handleSwipe(direction)}
+      style={{ flex: 1 }}
+    >
       <View style={styles.container}>
-        <TouchableOpacity
-          onPress={() => onClose(isPrize, aww.id)}
-          style={{ alignSelf: "flex-start", margin: 8 }}
-        >
-          <Text style={{ fontSize: 24 }}>X</Text>
-        </TouchableOpacity>
-
         <Text style={{ paddingHorizontal: 18, textAlign: "center" }}>
           {aww.title}
         </Text>
@@ -82,7 +86,7 @@ export default function PrizeModal({ aww, isPrize, onClose, ShareBtn }) {
 
         <ShareBtn />
       </View>
-    </Modal>
+    </GestureRecognizer>
   );
 }
 
@@ -97,6 +101,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#ffb6b6",
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: 32,
   },
 });
