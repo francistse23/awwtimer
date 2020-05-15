@@ -8,6 +8,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Button,
 } from "react-native";
 import ViewPager from "@react-native-community/viewpager";
 import GestureRecognizer, {
@@ -245,11 +246,6 @@ export default function App() {
         keychainService: Platform.OS === "ios" ? "iOS" : "Android",
       };
 
-      // await SecureStore.deleteItemAsync(
-      //   `${appNamespace}username`,
-      //   secureStoreOptions
-      // );
-
       // should return username#code
       let user = await SecureStore.getItemAsync(
         `${appNamespace}username`,
@@ -427,6 +423,19 @@ export default function App() {
               style={styles.altText}
             >{`connect with friends as ${currentUser}`}</Text>
           )}
+          <Button
+            onPress={() => {
+              const secureStoreOptions = {
+                keychainService: Platform.OS === "ios" ? "iOS" : "Android",
+              };
+
+              SecureStore.deleteItemAsync(
+                `${appNamespace}username`,
+                secureStoreOptions
+              );
+            }}
+            title="Reset user"
+          />
         </ScrollView>
         {!isTimerStarted && currentUser && (
           // have to wrap in view
