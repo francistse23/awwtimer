@@ -50,8 +50,6 @@ export default function FriendsList({
       setAddError(null);
       setAddSuccess(null);
 
-      // add 2 way add friends
-
       const [name, code] = friendName.split("#");
 
       if (friends.includes(name)) {

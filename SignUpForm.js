@@ -93,12 +93,7 @@ export default function SignUpForm({ onUserCreated }) {
         </Text>
       )}
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => {
-          createUser();
-        }}
-      >
+      <TouchableOpacity style={styles.button} onPress={() => createUser()}>
         <Text style={styles.buttonText}>Create User :)</Text>
       </TouchableOpacity>
     </View>

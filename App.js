@@ -269,6 +269,7 @@ export default function App() {
         const now = new Date().getTime();
         const timeRemaining = Math.ceil((timerEndDate - now) / 1000);
         if (timeRemaining < 0) {
+          getPrizes(currentUser.split("#")[0]);
           dispatch({ type: ACTION_TYPES.TIMER_DONE });
         } else {
           dispatch({ type: ACTION_TYPES.TIMER_TICK });
@@ -320,6 +321,9 @@ export default function App() {
               dispatch({ type: ACTION_TYPES.RESET });
             }}
             // route user to sign up if they aren't logged in?
+            // is now routing user to sign up
+            // but how can we handle after the sign up since it takes them
+            // back to the choose time view?
             ShareBtn={() => (
               <TouchableOpacity
                 onPress={() =>

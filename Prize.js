@@ -21,6 +21,7 @@ export default function Prize({ aww, isPrize, onClose, ShareBtn }) {
 
     switch (gestureName) {
       case SWIPE_RIGHT:
+      case SWIPE_DOWN:
         onClose(isPrize, aww.id);
     }
   };
