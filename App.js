@@ -48,7 +48,6 @@ function reducer(state, action) {
     case ACTION_TYPES.RESET:
       return initialState;
     case ACTION_TYPES.START_TIME:
-      console.log("starting timer");
       /*
        * need to handle two cases.
        * 1. User leaves the app open
@@ -63,25 +62,7 @@ function reducer(state, action) {
        * timerEndDate, a notification will prompt the user to open the app to
        * collect the prize.
        */
-      const localNotification = {
-        title: "Aww Timer",
-        body: "Good job! Open your reward and take a break!",
-        data: { isTimerDone: true },
-      };
-
-      const schedulingOptions = {
-        time: timerEndDate,
-      };
-
-      // clear all existing notifications before we schedule one
-      Notifications.cancelAllScheduledNotificationsAsync();
-
-      Notifications.scheduleLocalNotificationAsync(
-        localNotification,
-        schedulingOptions
-      )
-        .then(() => console.log("schedule notification"))
-        .catch((err) => console.error(err));
+      scheduleLocalNotification(timerEndDate);
 
       /*
        * Handle case 1 by setting timerEndDate in local state. The view will
@@ -648,4 +629,26 @@ async function askForNotificationPermissions() {
       vibrate: [0, 250, 250, 250],
     });
   }
+}
+
+function scheduleLocalNotification(timerEndDate) {
+  const localNotification = {
+    title: "Aww Timer",
+    body: "Good job! Open your reward and take a break!",
+    data: { isTimerDone: true },
+  };
+
+  const schedulingOptions = {
+    time: timerEndDate,
+  };
+
+  // clear all existing notifications before we schedule one
+  Notifications.cancelAllScheduledNotificationsAsync();
+
+  Notifications.scheduleLocalNotificationAsync(
+    localNotification,
+    schedulingOptions
+  )
+    .then(() => console.log("schedule notification"))
+    .catch((err) => console.error(err));
 }
