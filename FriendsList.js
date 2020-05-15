@@ -2,6 +2,8 @@ import React from "react";
 import {
   Alert,
   Dimensions,
+  KeyboardAvoidingView,
+  Platoform,
   StyleSheet,
   Text,
   TextInput,
@@ -28,6 +30,7 @@ export default function FriendsList({
   const addFriend = async (friendName) => {
     try {
       setAddError(null);
+      setAddSuccess(null);
 
       const [name, code] = friendName.split("#");
 
@@ -58,7 +61,7 @@ export default function FriendsList({
 
             setAddSuccess(`Added ${friendName} as a friend!`);
             setFriendName("");
-            getFriends;
+            getFriends();
           } else {
             // throw error, mismatch code
             setAddError("mismatch code ❌");
@@ -117,42 +120,46 @@ export default function FriendsList({
   };
 
   return (
-    // have to wrap in view
-    // otherwise viewpager doesnt render correctly
-    <View key="friends" style={styles.container}>
-      <View>
-        <View style={styles.horizontalContainer}>
-          <TextInput
-            onChangeText={(text) => setFriendName(text)}
-            placeholder="e.g. arcsecond#7125"
-            style={styles.input}
-            value={friendName}
-          />
-          <TouchableOpacity
-            disabled={!friendName && friendName.split("#").length < 2}
-            onPress={() => addFriend(friendName)}
-            style={{ ...styles.button, flex: 1 }}
-          >
-            <Text style={styles.buttonText}>Add</Text>
-          </TouchableOpacity>
-        </View>
-        {addError && (
-          <Text style={{ color: "red", marginHorizontal: 24 }}>{addError}</Text>
-        )}
+    <>
+      {isViewing && (
+        <View>
+          <View style={styles.horizontalContainer}>
+            <TextInput
+              onChangeText={(text) => setFriendName(text)}
+              placeholder="e.g. arcsecond#7125"
+              style={styles.input}
+              value={friendName}
+            />
+            <TouchableOpacity
+              disabled={!friendName && friendName.split("#").length < 2}
+              onPress={() => addFriend(friendName)}
+              style={{ ...styles.button, flex: 1 }}
+            >
+              <Text style={styles.buttonText}>Add</Text>
+            </TouchableOpacity>
+          </View>
+          {addError && (
+            <Text style={{ color: "red", fontSize: 16, marginHorizontal: 18 }}>
+              {addError}
+            </Text>
+          )}
 
-        {addSuccess && (
-          <Text style={{ color: "green", marginHorizontal: 24 }}>
-            {addSuccess}
-          </Text>
-        )}
-      </View>
+          {addSuccess && (
+            <Text
+              style={{ color: "green", fontSize: 16, marginHorizontal: 24 }}
+            >
+              {addSuccess}
+            </Text>
+          )}
+        </View>
+      )}
 
       <FlatList
         contentContainerStyle={{
           alignItems: "center",
           flex: 1,
           justifyContent: "space-around",
-          paddingVertical: isViewing ? 48 : 16,
+          // paddingVertical: isViewing ? 48 : 16,
           width: Dimensions.get("window").width,
         }}
         data={friends}
@@ -207,7 +214,7 @@ export default function FriendsList({
           );
         }}
       />
-    </View>
+    </>
   );
 }
 
@@ -215,16 +222,21 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: "#679b9b",
     borderRadius: 10,
+    marginHorizontal: 12,
     padding: 12,
-    width: 200,
+    width: 150,
   },
-  buttonContainer: { flexDirection: "row", justifyContent: "space-between" },
+  buttonContainer: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 12,
+  },
   buttonText: {
     color: "white",
     fontSize: 24,
     textAlign: "center",
   },
-  container: { flex: 1, paddingVertical: 60 },
   horizontalContainer: {
     alignItems: "center",
     flexDirection: "row",

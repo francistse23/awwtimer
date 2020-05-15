@@ -9,14 +9,6 @@ import {
 } from "react-native";
 import * as SecureStore from "expo-secure-store";
 
-// function uuidv4() {
-//     return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-//       var r = (Math.random() * 16) | 0,
-//         v = c == "x" ? r : (r & 0x3) | 0x8;
-//       return v.toString(16);
-//     });
-//   }
-
 function generateCode() {
   let code = "",
     random = "0123456789";
@@ -30,33 +22,44 @@ function generateCode() {
 
 export default function SignUpForm({ onUserCreated }) {
   const [username, setUsername] = React.useState("");
-  //   const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState(null);
   const appNamespace = "awwtimer-";
 
   const createUser = async () => {
     try {
-      const code = generateCode();
-      const data = {
-        [username]: code,
-      };
+      setError(null);
+      let isExisting = await fetch(
+        `https://awwtimer.firebaseio.com/users/${username}.json`
+      );
 
-      let res = await fetch("https://awwtimer.firebaseio.com/users.json", {
-        body: JSON.stringify(data),
-        headers: {
-          "Content-Type": "application/json",
-        },
-        // dont use post or put
-        // post, firebase will auto-generate a key/id and use that as the new user object's key, too chaotic
-        // put, replaces all users (effectively wiping all users)
-        method: "patch",
-        mode: "cors",
-      });
+      isExisting = await isExisting.json();
 
-      res = await res.json();
+      if (isExisting) {
+        setError("Username in use 😢");
+      } else {
+        const code = generateCode();
+        const data = {
+          [username]: code,
+        };
 
-      storeCredentials(username, code);
+        let res = await fetch("https://awwtimer.firebaseio.com/users.json", {
+          body: JSON.stringify(data),
+          headers: {
+            "Content-Type": "application/json",
+          },
+          // dont use post or put
+          // post, firebase will auto-generate a key/id and use that as the new user object's key, too chaotic
+          // put, replaces all users (effectively wiping all users)
+          method: "patch",
+          mode: "cors",
+        });
 
-      onUserCreated(`${username}#${code}`);
+        res = await res.json();
+
+        storeCredentials(username, code);
+
+        onUserCreated(`${username}#${code}`);
+      }
     } catch (err) {
       throw new Error(err);
     }
@@ -82,6 +85,13 @@ export default function SignUpForm({ onUserCreated }) {
         style={styles.input}
         value={username}
       />
+
+      {error && (
+        <Text style={{ color: "red", fontSize: 16, marginHorizontal: 24 }}>
+          {error}
+        </Text>
+      )}
+
       <TouchableOpacity
         style={styles.button}
         onPress={() => {
@@ -108,9 +118,10 @@ const styles = StyleSheet.create({
   },
   input: {
     borderColor: "black",
-    borderRadius: 12,
+    borderRadius: 6,
     borderWidth: 1,
-    margin: 8,
+    fontSize: 20,
+    margin: 16,
     padding: 8,
     width: 200,
   },

@@ -323,7 +323,7 @@ export default function App() {
   if (isCreatingUser) {
     return (
       <View style={styles.signUpContainer}>
-        <Text style={{ fontSize: 12 }}>Create a user</Text>
+        <Text style={{ fontSize: 36 }}>Create a user 🤗</Text>
         <SignUpForm
           onUserCreated={(username) => {
             setCurrentUser(username);
@@ -429,23 +429,27 @@ export default function App() {
           )}
         </ScrollView>
         {!isTimerStarted && currentUser && (
-          <FriendsList
-            currentUser={currentUser?.split("#")[0]}
-            error={error}
-            friends={friends}
-            getFriends={getFriends(currentUser?.split("#")[0])}
-            isViewing={true}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={() => {
-                  setRefreshing(true);
-                  getFriends(currentUser?.split("#")[0]);
-                  setRefreshing(false);
-                }}
-              />
-            }
-          />
+          // have to wrap in view
+          // otherwise viewpager doesnt render correctly
+          <View key="friends" style={{ flex: 1, paddingVertical: 60 }}>
+            <FriendsList
+              currentUser={currentUser?.split("#")[0]}
+              error={error}
+              friends={friends}
+              getFriends={() => getFriends(currentUser?.split("#")[0])}
+              isViewing={true}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={() => {
+                    setRefreshing(true);
+                    getFriends(currentUser?.split("#")[0]);
+                    setRefreshing(false);
+                  }}
+                />
+              }
+            />
+          </View>
         )}
       </ViewPager>
 
