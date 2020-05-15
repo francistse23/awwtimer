@@ -75,7 +75,6 @@ export default function FriendsList({
             setFriendName("");
             getFriends();
           } else {
-            // throw error, mismatch code
             setAddError("mismatch code ❌");
           }
         } else {

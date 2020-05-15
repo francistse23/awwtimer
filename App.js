@@ -1,6 +1,8 @@
 import React, { useState, useReducer } from "react";
 import {
   AsyncStorage,
+  Button,
+  KeyboardAvoidingView,
   Platform,
   RefreshControl,
   ScrollView,
@@ -8,7 +10,6 @@ import {
   Text,
   TouchableOpacity,
   View,
-  Button,
 } from "react-native";
 import ViewPager from "@react-native-community/viewpager";
 import * as SecureStore from "expo-secure-store";
@@ -278,8 +279,6 @@ export default function App() {
     return () => clearInterval(runTimer);
   }, [timerEndDate]);
 
-  React.useEffect(() => {}, [currentUser]);
-
   if (isCreatingUser) {
     return (
       <View style={styles.signUpContainer}>
@@ -295,7 +294,7 @@ export default function App() {
   }
 
   return (
-    <>
+    <KeyboardAvoidingView behavior="height" style={{ flex: 1 }}>
       {/* Prize */}
       {isPrizeVisible ? (
         isTimerDone && (
@@ -380,7 +379,14 @@ export default function App() {
                     alignItems: "center",
                   }}
                 >
-                  <ChooseTime dispatch={dispatch} />
+                  <ChooseTime
+                    startTimer={(time) =>
+                      dispatch({
+                        type: ACTION_TYPES.START_TIME,
+                        durationInSeconds: time,
+                      })
+                    }
+                  />
                   {/* creates/resets user */}
                   {currentUser ? (
                     <Button
@@ -421,7 +427,10 @@ export default function App() {
             )}
 
             {isTimerStarted && !isTimerDone && (
-              <TimerView dispatch={dispatch} timer={timer} />
+              <TimerView
+                reset={() => dispatch({ type: ACTION_TYPES.RESET })}
+                timer={timer}
+              />
             )}
 
             {isTimerDone && !isSharing && (
@@ -477,7 +486,7 @@ export default function App() {
           )}
         </ViewPager>
       )}
-    </>
+    </KeyboardAvoidingView>
   );
 }
 

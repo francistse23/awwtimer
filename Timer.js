@@ -3,15 +3,12 @@ import { Text, TouchableOpacity, View, StyleSheet } from "react-native";
 import GestureRecognizer, {
   swipeDirections,
 } from "react-native-swipe-gestures";
-import { ACTION_TYPES } from "./App";
 
 // https://reactnative.dev/docs/transforms
-export const ChooseTime = ({ dispatch }) => (
+export const ChooseTime = ({ startTimer }) => (
   <View>
     <TouchableOpacity
-      onPress={() =>
-        dispatch({ type: ACTION_TYPES.START_TIME, durationInSeconds: 5 })
-      }
+      onPress={() => startTimer(5)}
       style={[
         styles.button,
         {
@@ -23,9 +20,7 @@ export const ChooseTime = ({ dispatch }) => (
     </TouchableOpacity>
 
     <TouchableOpacity
-      onPress={() =>
-        dispatch({ type: ACTION_TYPES.START_TIME, durationInSeconds: 15 * 60 })
-      }
+      onPress={() => startTimer(15 * 60)}
       style={[
         styles.button,
         {
@@ -37,9 +32,7 @@ export const ChooseTime = ({ dispatch }) => (
     </TouchableOpacity>
 
     <TouchableOpacity
-      onPress={() =>
-        dispatch({ type: ACTION_TYPES.START_TIME, durationInSeconds: 30 * 60 })
-      }
+      onPress={() => startTimer(30 * 60)}
       style={[
         styles.button,
         {
@@ -52,7 +45,7 @@ export const ChooseTime = ({ dispatch }) => (
   </View>
 );
 
-export const TimerView = ({ timer }) => {
+export const TimerView = ({ reset, timer }) => {
   const formatTimeRemaining = (timeInSeconds) => {
     const mins = Math.floor(timeInSeconds / 60);
     const seconds = timeInSeconds % 60;
@@ -72,7 +65,7 @@ export const TimerView = ({ timer }) => {
 
     switch (gestureName) {
       case SWIPE_RIGHT:
-        dispatch({ type: ACTION_TYPES.RESET });
+        reset();
     }
   };
 
