@@ -294,7 +294,7 @@ export default function App() {
   }
 
   return (
-    <KeyboardAvoidingView behavior="height" style={{ flex: 1 }}>
+    <>
       {/* Prize */}
       {isPrizeVisible ? (
         isTimerDone && (
@@ -329,8 +329,10 @@ export default function App() {
                 }
                 style={styles.button}
               >
-                <Text style={{ color: "white", fontSize: 18 }}>
-                  Share ( because you care ʕ๑•ᴥ•ʔ )
+                <Text
+                  style={{ color: "white", fontSize: 18, textAlign: "center" }}
+                >
+                  {`Share\n( because you care ʕ๑•ᴥ•ʔ )`}
                 </Text>
               </TouchableOpacity>
             )}
@@ -365,13 +367,13 @@ export default function App() {
               )}
             </View>
 
-            {!isTimerStarted && !isTimerDone && (
-              <View
-                style={{
-                  alignItems: "center",
-                  flex: 2,
-                }}
-              >
+            <View
+              style={{
+                alignItems: "center",
+                flex: 2,
+              }}
+            >
+              {!isTimerStarted && !isTimerDone && (
                 <View
                   style={{
                     flex: 1,
@@ -423,43 +425,43 @@ export default function App() {
                     </TouchableOpacity>
                   )}
                 </View>
-              </View>
-            )}
+              )}
 
-            {isTimerStarted && !isTimerDone && (
-              <TimerView
-                reset={() => dispatch({ type: ACTION_TYPES.RESET })}
-                timer={timer}
-              />
-            )}
+              {isTimerStarted && !isTimerDone && (
+                <TimerView
+                  reset={() => dispatch({ type: ACTION_TYPES.RESET })}
+                  timer={timer}
+                />
+              )}
 
-            {isTimerDone && !isSharing && (
-              <TouchableOpacity
-                style={styles.button}
-                onPress={() =>
-                  dispatch({
-                    type: ACTION_TYPES.COLLECT_PRIZE,
-                  })
-                }
-              >
-                <Text style={styles.buttonText}>
-                  🎁 <Text style={{ fontWeight: "300" }}>ʕ•ᴥ•ʔ</Text>
-                </Text>
-              </TouchableOpacity>
-            )}
+              {isTimerDone && !isSharing && (
+                <TouchableOpacity
+                  style={styles.button}
+                  onPress={() =>
+                    dispatch({
+                      type: ACTION_TYPES.COLLECT_PRIZE,
+                    })
+                  }
+                >
+                  <Text style={styles.buttonText}>
+                    🎁 <Text style={{ fontWeight: "300" }}>ʕ•ᴥ•ʔ</Text>
+                  </Text>
+                </TouchableOpacity>
+              )}
 
-            {isSharing && (
-              <FriendsList
-                aww={
-                  Object.keys(prizes).length > 0
-                    ? prizes[Object.keys(prizes)[0]]
-                    : aww
-                }
-                error={error}
-                friends={friends}
-                onClose={() => dispatch({ type: ACTION_TYPES.RESET })}
-              />
-            )}
+              {isSharing && (
+                <FriendsList
+                  aww={
+                    Object.keys(prizes).length > 0
+                      ? prizes[Object.keys(prizes)[0]]
+                      : aww
+                  }
+                  error={error}
+                  friends={friends}
+                  onClose={() => dispatch({ type: ACTION_TYPES.RESET })}
+                />
+              )}
+            </View>
           </ScrollView>
           {!isTimerStarted && currentUser && (
             // have to wrap in view
@@ -486,7 +488,7 @@ export default function App() {
           )}
         </ViewPager>
       )}
-    </KeyboardAvoidingView>
+    </>
   );
 }
 
@@ -523,7 +525,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#ffb6b6",
     flex: 1,
-    paddingVertical: 48,
+    paddingVertical: 100,
   },
   viewContainer: {
     flex: 1,

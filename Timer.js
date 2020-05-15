@@ -16,7 +16,7 @@ export const ChooseTime = ({ startTimer }) => (
         },
       ]}
     >
-      <Text style={styles.buttonText}>1 minutes</Text>
+      <Text style={styles.buttonText}>5 seconds</Text>
     </TouchableOpacity>
 
     <TouchableOpacity
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     borderColor: "white",
     borderWidth: 3,
     padding: 12,
-    margin: 18,
+    margin: 24,
   },
   buttonText: {
     color: "white",

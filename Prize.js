@@ -101,6 +101,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#ffb6b6",
     flex: 1,
-    paddingVertical: 32,
+    paddingVertical: 60,
   },
 });
