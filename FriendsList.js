@@ -32,6 +32,8 @@ export default function FriendsList({
       setAddError(null);
       setAddSuccess(null);
 
+      // add 2 way add friends
+
       const [name, code] = friendName.split("#");
 
       if (friends.includes(name)) {
@@ -45,10 +47,28 @@ export default function FriendsList({
 
         if (friendCode) {
           if (friendCode === code) {
-            const data = { [name]: true };
+            // adds friend to your list
+            const friendData = { [name]: true };
 
             await fetch(
-              `https://awwtimer.firebaseio.com/friends/${currentUser}.json`,
+              `https://awwtimer.firebaseio.com/friends/${
+                currentUser?.split("#")[0]
+              }.json`,
+              {
+                body: JSON.stringify(friendData),
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                method: "patch",
+                mode: "cors",
+              }
+            );
+
+            // adds you to your friend's list
+            const data = { [currentUser?.split("#")[0]]: true };
+
+            await fetch(
+              `https://awwtimer.firebaseio.com/friends/${name}.json`,
               {
                 body: JSON.stringify(data),
                 headers: {
@@ -123,10 +143,17 @@ export default function FriendsList({
     <>
       {isViewing && (
         <View>
+          {currentUser && (
+            <Text
+              style={styles.altText}
+            >{`Connect with friends as ${currentUser}`}</Text>
+          )}
+
           <View style={styles.horizontalContainer}>
             <TextInput
               onChangeText={(text) => setFriendName(text)}
               placeholder="e.g. arcsecond#7125"
+              placeholderTextColor="#679b9b"
               style={styles.input}
               value={friendName}
             />
@@ -138,6 +165,7 @@ export default function FriendsList({
               <Text style={styles.buttonText}>Add</Text>
             </TouchableOpacity>
           </View>
+
           {addError && (
             <Text style={{ color: "red", fontSize: 16, marginHorizontal: 18 }}>
               {addError}
@@ -198,6 +226,7 @@ export default function FriendsList({
             Your friends 😀
           </Text>
         }
+        numOfColumns={2}
         refreshControl={isViewing ? refreshControl : null}
         renderItem={({ item }) => {
           return (
@@ -219,6 +248,12 @@ export default function FriendsList({
 }
 
 const styles = StyleSheet.create({
+  altText: {
+    color: "black",
+    fontWeight: "600",
+    marginVertical: 12,
+    textAlign: "center",
+  },
   button: {
     backgroundColor: "#679b9b",
     borderRadius: 10,
@@ -244,11 +279,12 @@ const styles = StyleSheet.create({
     margin: 12,
   },
   input: {
-    backgroundColor: "white",
+    backgroundColor: "transparent",
+    borderBottomWidth: 2,
     borderColor: "#679b9b",
     borderRadius: 5,
-    borderWidth: 2,
     flex: 3,
+    fontSize: 16,
     height: 50,
     marginHorizontal: 12,
     padding: 6,

@@ -18,6 +18,7 @@ export default function PrizeModal({ aww, isPrize, onClose, ShareBtn }) {
 
   if (!aww) return <Text style={{ textAlign: "center" }}>💩</Text>;
 
+  // remove modal
   return (
     <Modal statusBarTranslucent={false} visible={true}>
       <View style={styles.container}>

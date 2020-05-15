@@ -379,11 +379,6 @@ export default function App() {
               onClose={() => dispatch({ type: ACTION_TYPES.RESET })}
             />
           )}
-          {currentUser && !isTimerStarted && (
-            <Text
-              style={styles.altText}
-            >{`connect with friends as ${currentUser}`}</Text>
-          )}
           <Button
             onPress={() => {
               const secureStoreOptions = {
@@ -403,7 +398,7 @@ export default function App() {
           // otherwise viewpager doesnt render correctly
           <View key="friends" style={{ flex: 1, paddingVertical: 60 }}>
             <FriendsList
-              currentUser={currentUser?.split("#")[0]}
+              currentUser={currentUser}
               error={error}
               friends={friends}
               getFriends={() => getFriends(currentUser?.split("#")[0])}
@@ -468,10 +463,6 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  altText: {
-    color: "#333",
-    fontWeight: "300",
-  },
   button: {
     backgroundColor: "#679b9b",
     borderRadius: 10,
