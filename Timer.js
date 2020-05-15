@@ -1,5 +1,8 @@
 import React from "react";
 import { Text, TouchableOpacity, View, StyleSheet } from "react-native";
+import GestureRecognizer, {
+  swipeDirections,
+} from "react-native-swipe-gestures";
 import { ACTION_TYPES } from "./App";
 
 // https://reactnative.dev/docs/transforms
@@ -59,17 +62,37 @@ export const TimerView = ({ timer }) => {
     }`;
   };
 
+  const config = {
+    velocityThreshold: 0.3,
+    directionalOffsetThreshold: 80,
+  };
+
+  const handleSwipe = (gestureName) => {
+    const { SWIPE_RIGHT } = swipeDirections;
+
+    switch (gestureName) {
+      case SWIPE_RIGHT:
+        dispatch({ type: ACTION_TYPES.RESET });
+    }
+  };
+
   return (
-    <View
-      style={{
-        alignItems: "center",
-        justifyContent: "center",
-        flex: 5,
-        width: "100%",
-      }}
+    <GestureRecognizer
+      config={config}
+      onSwipe={(direction) => handleSwipe(direction)}
+      style={{ flex: 1 }}
     >
-      <Text style={{ fontSize: 40 }}>{formatTimeRemaining(timer)}</Text>
-    </View>
+      <View
+        style={{
+          alignItems: "center",
+          justifyContent: "center",
+          flex: 5,
+          width: "100%",
+        }}
+      >
+        <Text style={{ fontSize: 40 }}>{formatTimeRemaining(timer)}</Text>
+      </View>
+    </GestureRecognizer>
   );
 };
 

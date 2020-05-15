@@ -11,9 +11,6 @@ import {
   Button,
 } from "react-native";
 import ViewPager from "@react-native-community/viewpager";
-import GestureRecognizer, {
-  swipeDirections,
-} from "react-native-swipe-gestures";
 import * as SecureStore from "expo-secure-store";
 import SignUpForm from "./SignUpForm";
 import PrizeModal from "./PrizeModal";
@@ -125,20 +122,6 @@ export default function App() {
     isSharing,
     isCreatingUser,
   } = timerState;
-
-  const config = {
-    velocityThreshold: 0.3,
-    directionalOffsetThreshold: 80,
-  };
-
-  const handleSwipe = (gestureName) => {
-    const { SWIPE_RIGHT } = swipeDirections;
-
-    switch (gestureName) {
-      case SWIPE_RIGHT:
-        dispatch({ type: ACTION_TYPES.RESET });
-    }
-  };
 
   async function getFriends(currentUser) {
     try {
@@ -313,11 +296,7 @@ export default function App() {
   }
 
   return (
-    <GestureRecognizer
-      config={config}
-      onSwipe={(direction) => handleSwipe(direction)}
-      style={{ flex: 1 }}
-    >
+    <>
       {/* View pager provides the swiping/carousel like function */}
       {/* https://github.com/react-native-community/react-native-viewpager */}
       <ViewPager initialPage={0} style={styles.container}>
@@ -469,6 +448,7 @@ export default function App() {
                 }
                 dispatch({ type: ACTION_TYPES.RESET });
               }}
+              // route user to sign up if they aren't logged in?
               ShareBtn={() => (
                 <TouchableOpacity
                   onPress={() => dispatch({ type: ACTION_TYPES.SHARE_PRIZE })}
@@ -483,7 +463,7 @@ export default function App() {
           )}
         </View>
       )}
-    </GestureRecognizer>
+    </>
   );
 }
 
