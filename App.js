@@ -20,8 +20,9 @@ import PrizeModal from "./PrizeModal";
 import FriendsList from "./FriendsList";
 import { Notifications } from "expo";
 import * as Permissions from "expo-permissions";
+import { TimerView, ChooseTime } from "./Timer";
 
-const ACTION_TYPES = {
+export const ACTION_TYPES = {
   RESET: "RESET",
   START_TIME: "START_TIME",
   TIMER_TICK: "TIMER_TICK",
@@ -485,77 +486,6 @@ export default function App() {
     </GestureRecognizer>
   );
 }
-
-// https://reactnative.dev/docs/transforms
-const ChooseTime = ({ dispatch }) => (
-  <View>
-    <TouchableOpacity
-      onPress={() =>
-        dispatch({ type: ACTION_TYPES.START_TIME, durationInSeconds: 5 })
-      }
-      style={[
-        styles.button,
-        {
-          transform: [{ rotate: "-3deg" }],
-        },
-      ]}
-    >
-      <Text style={styles.buttonText}>1 minutes</Text>
-    </TouchableOpacity>
-
-    <TouchableOpacity
-      onPress={() =>
-        dispatch({ type: ACTION_TYPES.START_TIME, durationInSeconds: 15 * 60 })
-      }
-      style={[
-        styles.button,
-        {
-          transform: [{ rotate: "7deg" }],
-        },
-      ]}
-    >
-      <Text style={styles.buttonText}>15 minutes</Text>
-    </TouchableOpacity>
-
-    <TouchableOpacity
-      onPress={() =>
-        dispatch({ type: ACTION_TYPES.START_TIME, durationInSeconds: 30 * 60 })
-      }
-      style={[
-        styles.button,
-        {
-          transform: [{ rotate: "-9deg" }],
-        },
-      ]}
-    >
-      <Text style={styles.buttonText}>30 minutes</Text>
-    </TouchableOpacity>
-  </View>
-);
-
-const TimerView = ({ timer }) => {
-  const formatTimeRemaining = (timeInSeconds) => {
-    const mins = Math.floor(timeInSeconds / 60);
-    const seconds = timeInSeconds % 60;
-
-    return `${mins >= 10 ? mins : `0${mins}`}:${
-      seconds.toString().length > 1 ? seconds : `0${seconds}`
-    }`;
-  };
-
-  return (
-    <View
-      style={{
-        alignItems: "center",
-        justifyContent: "center",
-        flex: 5,
-        width: "100%",
-      }}
-    >
-      <Text style={{ fontSize: 40 }}>{formatTimeRemaining(timer)}</Text>
-    </View>
-  );
-};
 
 const styles = StyleSheet.create({
   altText: {
