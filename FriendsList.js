@@ -221,9 +221,13 @@ export default function FriendsList({
         numOfColumns={2}
         refreshControl={isViewing ? refreshControl : null}
         renderItem={({ item }) => {
-          return (
+          return isViewing ? (
+            <View style={styles.button}>
+              <Text style={styles.buttonText}>{item}</Text>
+            </View>
+          ) : (
             <TouchableOpacity
-              onPress={() => (!isViewing ? addFriendToShare(item) : null)}
+              onPress={() => addFriendToShare(item)}
               style={
                 selectedFriends.includes(item) || isViewing
                   ? styles.button
