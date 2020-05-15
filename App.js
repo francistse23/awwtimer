@@ -240,15 +240,6 @@ export default function App() {
       setAww(aww);
     }
 
-    getData();
-  }, []);
-
-  React.useEffect(() => {
-    askForNotificationPermissions();
-  }, []);
-
-  React.useEffect(() => {
-    login();
     const unsubscribeFromNotifications = Notifications.addListener(
       (notification) => {
         console.log("Notification received:", notification);
@@ -257,6 +248,10 @@ export default function App() {
         }
       }
     );
+
+    login();
+    askForNotificationPermissions();
+    getData();
 
     return () => unsubscribeFromNotifications.remove();
   }, []);
