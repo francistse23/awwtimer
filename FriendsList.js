@@ -27,6 +27,24 @@ export default function FriendsList({
   const [addSuccess, setAddSuccess] = React.useState(null);
   const [addError, setAddError] = React.useState(null);
 
+  const addFriendAPICall = async (user, friend) => {
+    try {
+      const data = { [user]: true };
+
+      await fetch(`https://awwtimer.firebaseio.com/friends/${friend}.json`, {
+        body: JSON.stringify(data),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "patch",
+        mode: "cors",
+      });
+    } catch (err) {
+      setAddError(`error adding friend: ${friend}`);
+      throw new Error(err);
+    }
+  };
+
   const addFriend = async (friendName) => {
     try {
       setAddError(null);
@@ -48,36 +66,10 @@ export default function FriendsList({
         if (friendCode) {
           if (friendCode === code) {
             // adds friend to your list
-            const friendData = { [name]: true };
-
-            await fetch(
-              `https://awwtimer.firebaseio.com/friends/${
-                currentUser?.split("#")[0]
-              }.json`,
-              {
-                body: JSON.stringify(friendData),
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                method: "patch",
-                mode: "cors",
-              }
-            );
+            addFriendAPICall(currentUser?.split("#")[0], name);
 
             // adds you to your friend's list
-            const data = { [currentUser?.split("#")[0]]: true };
-
-            await fetch(
-              `https://awwtimer.firebaseio.com/friends/${name}.json`,
-              {
-                body: JSON.stringify(data),
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                method: "patch",
-                mode: "cors",
-              }
-            );
+            addFriendAPICall(name, currentUser?.split("#")[0]);
 
             setAddSuccess(`Added ${friendName} as a friend!`);
             setFriendName("");
