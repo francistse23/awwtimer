@@ -4,12 +4,14 @@ import { Video } from "expo-av";
 import GestureRecognizer, {
   swipeDirections,
 } from "react-native-swipe-gestures";
+const quokka = require("./assets/quokka.png");
 
 // will prioritize prizes if there are any
 // otherwise will draw from random
 // viewed prizes will be deleted from local storage on close
 export default function Prize({ aww, isPrize, onClose, ShareBtn }) {
   const videoRef = React.useRef(null);
+  const [isLoading, setLoading] = React.useState(false);
 
   const config = {
     velocityThreshold: 0.3,
@@ -34,9 +36,20 @@ export default function Prize({ aww, isPrize, onClose, ShareBtn }) {
       style={{ flex: 1 }}
     >
       <View style={styles.container}>
-        <Text style={{ paddingHorizontal: 18, textAlign: "center" }}>
-          {aww.title}
-        </Text>
+        {isLoading && (
+          <>
+            <Text
+              style={{ fontSize: 28, textAlign: "center", paddingBottom: 15 }}
+            >
+              🎁incoming!
+            </Text>
+            <Text style={{ paddingHorizontal: 18, textAlign: "center" }}>
+              {aww.title}
+            </Text>
+          </>
+        )}
+
+        {!isLoading && <ShareBtn />}
 
         {aww.url.endsWith(".jpg") && (
           <Image
@@ -68,7 +81,11 @@ export default function Prize({ aww, isPrize, onClose, ShareBtn }) {
           <>
             <Video
               isLooping
-              onLoad={() => videoRef.current.presentFullscreenPlayer()}
+              onLoadStart={() => setLoading(true)}
+              onLoad={() => {
+                videoRef.current.presentFullscreenPlayer();
+                setLoading(false);
+              }}
               ref={videoRef}
               resizeMode="contain"
               shouldPlay
@@ -84,8 +101,6 @@ export default function Prize({ aww, isPrize, onClose, ShareBtn }) {
             />
           </>
         )}
-
-        <ShareBtn />
       </View>
     </GestureRecognizer>
   );
@@ -100,6 +115,7 @@ const styles = StyleSheet.create({
   },
   container: {
     alignItems: "center",
+    justifyContent: "center",
     backgroundColor: "#ffb6b6",
     flex: 1,
     paddingVertical: 60,
