@@ -237,7 +237,7 @@ export default function App() {
       const posts = data?.data?.children?.map((c) => c.data) ?? [];
 
       const randomIndex = Math.floor(Math.random() * posts.length);
-      const aww = posts[1];
+      const aww = posts[randomIndex];
       // const images = posts.filter((p) => p.url.endsWith(".jpg"));
 
       setAww(aww);
