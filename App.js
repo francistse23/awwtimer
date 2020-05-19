@@ -324,22 +324,39 @@ export default function App() {
             // is now routing user to sign up
             // but how can we handle after the sign up since it takes them
             // back to the choose time view?
-            ShareBtn={() => (
-              <TouchableOpacity
-                onPress={() =>
-                  currentUser
-                    ? dispatch({ type: ACTION_TYPES.SHARE_PRIZE })
-                    : dispatch({ type: ACTION_TYPES.CREATE_USER })
-                }
-                style={styles.button}
-              >
-                <Text
-                  style={{ color: "white", fontSize: 18, textAlign: "center" }}
+            ShareBtn={() =>
+              currentUser ? (
+                <TouchableOpacity
+                  onPress={() => dispatch({ type: ACTION_TYPES.SHARE_PRIZE })}
+                  style={styles.button}
                 >
-                  {`Share\n( because you care ʕ๑•ᴥ•ʔ )`}
-                </Text>
-              </TouchableOpacity>
-            )}
+                  <Text
+                    style={{
+                      color: "white",
+                      fontSize: 18,
+                      textAlign: "center",
+                    }}
+                  >
+                    {`Share\n( because you care ʕ๑•ᴥ•ʔ )`}
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  onPress={() => dispatch({ type: ACTION_TYPES.RESET })}
+                  style={styles.button}
+                >
+                  <Text
+                    style={{
+                      color: "white",
+                      fontSize: 18,
+                      textAlign: "center",
+                    }}
+                  >
+                    Good job!
+                  </Text>
+                </TouchableOpacity>
+              )
+            }
           />
         )
       ) : (
@@ -397,6 +414,7 @@ export default function App() {
                   {currentUser ? (
                     <Button
                       onPress={() => {
+                        console.log("deleting user");
                         const secureStoreOptions = {
                           keychainService:
                             Platform.OS === "ios" ? "iOS" : "Android",
