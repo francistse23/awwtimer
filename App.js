@@ -269,7 +269,10 @@ export default function App() {
         const now = new Date().getTime();
         const timeRemaining = Math.ceil((timerEndDate - now) / 1000);
         if (timeRemaining < 0) {
-          getPrizes(currentUser.split("#")[0]);
+          if (currentUser) {
+            getPrizes(currentUser.split("#")[0]);
+          }
+
           dispatch({ type: ACTION_TYPES.TIMER_DONE });
         } else {
           dispatch({ type: ACTION_TYPES.TIMER_TICK });
