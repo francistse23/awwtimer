@@ -17,7 +17,7 @@ export default function Prize({ aww, isPrize, onClose, ShareBtn }) {
   };
 
   const handleSwipe = (gestureName) => {
-    const { SWIPE_RIGHT } = swipeDirections;
+    const { SWIPE_RIGHT, SWIPE_DOWN } = swipeDirections;
 
     switch (gestureName) {
       case SWIPE_RIGHT:
