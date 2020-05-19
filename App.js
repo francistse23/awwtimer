@@ -230,19 +230,19 @@ export default function App() {
     }
   }
 
+  async function getData() {
+    const response = await fetch("https://www.reddit.com/r/aww/hot.json");
+    const data = await response.json();
+    const posts = data?.data?.children?.map((c) => c.data) ?? [];
+
+    const randomIndex = Math.floor(Math.random() * posts.length);
+    const aww = posts[randomIndex];
+    // const images = posts.filter((p) => p.url.endsWith(".jpg"));
+
+    setAww(aww);
+  }
+
   React.useEffect(() => {
-    async function getData() {
-      const response = await fetch("https://www.reddit.com/r/aww/hot.json");
-      const data = await response.json();
-      const posts = data?.data?.children?.map((c) => c.data) ?? [];
-
-      const randomIndex = Math.floor(Math.random() * posts.length);
-      const aww = posts[randomIndex];
-      // const images = posts.filter((p) => p.url.endsWith(".jpg"));
-
-      setAww(aww);
-    }
-
     const unsubscribeFromNotifications = Notifications.addListener(
       (notification) => {
         console.log("Notification received:", notification);
@@ -254,7 +254,6 @@ export default function App() {
 
     login();
     askForNotificationPermissions();
-    getData();
 
     return () => unsubscribeFromNotifications.remove();
   }, []);
@@ -272,6 +271,8 @@ export default function App() {
           if (currentUser) {
             getPrizes(currentUser.split("#")[0]);
           }
+
+          getData();
 
           dispatch({ type: ACTION_TYPES.TIMER_DONE });
         } else {
