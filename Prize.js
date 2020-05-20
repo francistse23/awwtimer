@@ -28,7 +28,6 @@ export default function Prize({ aww, isPrize, onClose, ShareBtn }) {
     }
   };
 
-  if (!aww) return <Text style={{ textAlign: "center" }}>💩</Text>;
   return (
     <GestureRecognizer
       config={config}
