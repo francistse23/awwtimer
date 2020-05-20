@@ -111,6 +111,7 @@ export default function App() {
   const [friends, setFriends] = React.useState([]);
   const [prizes, setPrizes] = useState({});
   const [refreshing, setRefreshing] = useState(false);
+  const [after, setAfter] = useState(null);
   const [aww, setAww] = React.useState(null);
   const [error, setError] = React.useState(null);
 
@@ -231,12 +232,23 @@ export default function App() {
   }
 
   async function getData() {
-    const response = await fetch("https://www.reddit.com/r/aww/hot.json");
+    // https://www.reddit.com/dev/api/
+    // limit - the maximum number of items to return in this slice of the listing.
+    // after - indicate fullname of an item in the listing to use as the anchor point of the slice.
+    const response = await fetch(
+      `https://www.reddit.com/r/aww/hot.json?limit=1${
+        after ? `&after=${after}` : ""
+      }`
+    );
     const data = await response.json();
-    const posts = data?.data?.children?.map((c) => c.data) ?? [];
 
-    const randomIndex = Math.floor(Math.random() * posts.length);
-    const aww = posts[randomIndex];
+    setAfter(data.data.after);
+
+    const [aww] = data?.data?.children?.map((c) => c.data) ?? [];
+
+    // const posts = data?.data?.children?.map((c) => c.data) ?? [];
+    // const randomIndex = Math.floor(Math.random() * posts.length);
+    // const aww = posts[randomIndex];
     // const images = posts.filter((p) => p.url.endsWith(".jpg"));
 
     setAww(aww);
