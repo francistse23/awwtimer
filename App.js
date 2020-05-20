@@ -263,6 +263,8 @@ export default function App() {
   React.useEffect(() => {
     let runTimer;
 
+    getData();
+
     if (timerEndDate) {
       runTimer = setInterval(() => {
         const now = new Date().getTime();
@@ -271,8 +273,6 @@ export default function App() {
           if (currentUser) {
             getPrizes(currentUser.split("#")[0]);
           }
-
-          getData();
 
           dispatch({ type: ACTION_TYPES.TIMER_DONE });
         } else {
