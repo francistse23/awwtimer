@@ -1,16 +1,27 @@
 import React from "react";
-import { Dimensions, Image, StyleSheet, Text, View } from "react-native";
+import {
+  Dimensions,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Video } from "expo-av";
 import GestureRecognizer, {
   swipeDirections,
 } from "react-native-swipe-gestures";
-const quokka = require("./assets/quokka.png");
 
 // will prioritize prizes if there are any
 // otherwise will draw from random
 // viewed prizes will be deleted from local storage on close
-export default function Prize({ aww, isPrize, onClose, ShareBtn }) {
-  const videoRef = React.useRef(null);
+export default function Prize({
+  aww,
+  isPrize,
+  onClose,
+  ShareBtn,
+  forwardedRef,
+}) {
   const [isLoading, setLoading] = React.useState(false);
 
   const config = {
@@ -42,64 +53,57 @@ export default function Prize({ aww, isPrize, onClose, ShareBtn }) {
             >
               🎁incoming!
             </Text>
-            <Text style={{ paddingHorizontal: 18, textAlign: "center" }}>
-              {aww.title}
-            </Text>
           </>
         )}
 
         {!isLoading && <ShareBtn />}
 
-        {aww.url.endsWith(".jpg") && (
+        <Text style={{ paddingHorizontal: 18, textAlign: "center" }}>
+          {aww.title}
+        </Text>
+
+        {(aww.url.endsWith(".jpg") ||
+          aww.url.endsWith(".png") ||
+          aww.url.endsWith(".gif") ||
+          !aww.post_hint.includes("video")) && (
           <Image
             resizeMode="contain"
             source={{
               uri: aww.url,
             }}
             style={{
-              width: Dimensions.get("window").width * 0.65,
-              height: Dimensions.get("window").height * 0.65,
+              borderRadius: 5,
+              height: Dimensions.get("window").height * 0.75,
+              width: Dimensions.get("window").width * 0.75,
             }}
           />
         )}
 
-        {aww?.secure_media?.oembed && (
-          <Image
-            resizeMode="contain"
-            source={{
-              uri: aww.secure_media.oembed.thumbnail_url,
-            }}
-            style={{
-              width: Dimensions.get("window").width * 0.65,
-              height: Dimensions.get("window").height * 0.65,
-            }}
-          />
-        )}
+        {/* removed gif rendering using secure_media */}
+        {/* not all gifs have secure_media */}
 
-        {!aww.url.endsWith(".jpg") && (
-          <>
+        {(aww.url.includes("gfy") ||
+          aww.url.endsWith(".gifv") ||
+          aww.post_hint.includes("video")) &&
+          !isLoading && (
             <Video
-              isLooping
-              onLoadStart={() => setLoading(true)}
-              onLoad={() => {
-                videoRef.current.presentFullscreenPlayer();
-                setLoading(false);
-              }}
-              ref={videoRef}
+              ref={forwardedRef}
               resizeMode="contain"
-              shouldPlay
-              source={{
-                uri:
-                  aww?.crosspost_parent_list?.length > 0
-                    ? aww.crosspost_parent_list[0].secure_media.reddit_video
-                        .fallback_url
-                    : aww.secure_media?.reddit_video?.fallback_url,
+              posterSource={{ uri: aww.thumbnail }}
+              posterStyle={{
+                height: 300,
+                width: 300,
               }}
-              style={{ flex: 1 }}
+              style={{
+                alignSelf: "center",
+                flex: 1,
+                width: 300,
+                height: 300,
+              }}
+              usePoster
               useNativeControls
             />
-          </>
-        )}
+          )}
       </View>
     </GestureRecognizer>
   );

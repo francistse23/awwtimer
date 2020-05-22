@@ -1,8 +1,7 @@
-import React, { useState, useReducer } from "react";
+import React, { useState, useReducer, useRef } from "react";
 import {
   AsyncStorage,
   Button,
-  KeyboardAvoidingView,
   Platform,
   RefreshControl,
   ScrollView,
@@ -13,8 +12,9 @@ import {
 } from "react-native";
 import ViewPager from "@react-native-community/viewpager";
 import * as SecureStore from "expo-secure-store";
+import { Video } from "expo-av";
 import SignUpForm from "./SignUpForm";
-import PrizeModal from "./Prize";
+import Prize from "./Prize";
 import FriendsList from "./FriendsList";
 import { Notifications } from "expo";
 import * as Permissions from "expo-permissions";
@@ -115,6 +115,8 @@ export default function App() {
   const [aww, setAww] = React.useState(null);
   const [error, setError] = React.useState(null);
 
+  const videoRef = useRef(null);
+
   const {
     timer,
     timerEndDate,
@@ -209,6 +211,33 @@ export default function App() {
     }
   }
 
+  async function getData() {
+    // https://www.reddit.com/dev/api/
+    // limit - the maximum number of items to return in this slice of the listing.
+    // after - indicate fullname of an item in the listing to use as the anchor point of the slice.
+    // downside of this, unless we are storing the after somewhere
+    // it'll always follow the same order when the app restarts
+    // until reddit refreshes the list or a new post takes the #1 spot in the list
+    const response = await fetch(
+      `https://www.reddit.com/r/aww/hot.json?limit=1${
+        after ? `&after=${after}` : ""
+      }`
+    );
+    const data = await response.json();
+
+    await setAfter(data.data.after);
+
+    const aww = data?.data?.children[0]?.data;
+
+    delete aww.all_awardings;
+    // const posts = data?.data?.children?.map((c) => c.data) ?? [];
+    // const randomIndex = Math.floor(Math.random() * posts.length);
+    // const aww = posts[randomIndex];
+    // const images = posts.filter((p) => p.url.endsWith(".jpg"));
+
+    setAww(aww);
+  }
+
   async function login() {
     try {
       const secureStoreOptions = {
@@ -231,33 +260,62 @@ export default function App() {
     }
   }
 
-  async function getData() {
-    // https://www.reddit.com/dev/api/
-    // limit - the maximum number of items to return in this slice of the listing.
-    // after - indicate fullname of an item in the listing to use as the anchor point of the slice.
-    const response = await fetch(
-      `https://www.reddit.com/r/aww/hot.json?limit=1${
-        after ? `&after=${after}` : ""
-      }`
+  const PrizeWithForwardedRef = React.forwardRef((props, ref) => {
+    return (
+      <Prize
+        aww={
+          Object.keys(prizes).length > 0 ? prizes[Object.keys(prizes)[0]] : aww
+        }
+        isPrize={Object.keys(prizes).length > 0 ? true : false}
+        onClose={async (isPrize, prizeId) => {
+          setAww(null);
+          if (isPrize) {
+            delete prizes[prizeId];
+            if (Object.keys(prizes).length > 0) {
+              await AsyncStorage.setItem(
+                `${appNamespace}prizes`,
+                JSON.stringify(prizes)
+              );
+            } else {
+              await AsyncStorage.removeItem(`${appNamespace}prizes`);
+            }
+          }
+          dispatch({ type: ACTION_TYPES.RESET });
+        }}
+        // route user to sign up if they aren't logged in?
+        // is now routing user to sign up
+        // but how can we handle after the sign up since it takes them
+        // back to the choose time view?
+        ShareBtn={() => (
+          <TouchableOpacity
+            onPress={() => {
+              setAww(null);
+              currentUser
+                ? dispatch({ type: ACTION_TYPES.SHARE_PRIZE })
+                : dispatch({ type: ACTION_TYPES.RESET });
+            }}
+            style={styles.button}
+          >
+            <Text
+              style={{
+                color: "white",
+                fontSize: 18,
+                textAlign: "center",
+              }}
+            >
+              {currentUser ? `Share\n( because you care ʕ๑•ᴥ•ʔ )` : "Good job!"}
+            </Text>
+          </TouchableOpacity>
+        )}
+        forwardedRef={ref}
+      />
     );
-    const data = await response.json();
-
-    setAfter(data.data.after);
-
-    const [aww] = data?.data?.children?.map((c) => c.data) ?? [];
-
-    // const posts = data?.data?.children?.map((c) => c.data) ?? [];
-    // const randomIndex = Math.floor(Math.random() * posts.length);
-    // const aww = posts[randomIndex];
-    // const images = posts.filter((p) => p.url.endsWith(".jpg"));
-
-    setAww(aww);
-  }
+  });
 
   React.useEffect(() => {
     const unsubscribeFromNotifications = Notifications.addListener(
       (notification) => {
-        console.log("Notification received:", notification);
+        // console.log("Notification received:", notification);
         if (notification?.data?.isTimerDone) {
           dispatch({ type: ACTION_TYPES.TIMER_DONE });
         }
@@ -275,7 +333,7 @@ export default function App() {
   React.useEffect(() => {
     let runTimer;
 
-    getData();
+    // getData();
 
     if (timerEndDate) {
       runTimer = setInterval(() => {
@@ -296,6 +354,49 @@ export default function App() {
     return () => clearInterval(runTimer);
   }, [timerEndDate]);
 
+  // (async () =>
+  //   console.log(await videoRef.current.presentFullscreenPlayerAsync()))();
+
+  React.useEffect(() => {
+    async function loadVideo() {
+      try {
+        await videoRef?.current?.unloadAsync();
+
+        // console.log(aww);
+
+        const uri =
+          aww?.crosspost_parent_list?.length > 0
+            ? aww.crosspost_parent_list[0].secure_media.reddit_video
+                .fallback_url
+            : aww.post_hint.includes("video")
+            ? // not all media has reddit video child
+              aww.media?.reddit_video?.fallback_url
+            : aww.url;
+
+        const res = await videoRef?.current?.loadAsync(
+          {
+            uri,
+          },
+          { isLooping: true }
+        );
+
+        console.log("video loaded?", uri, res);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    if (!aww) getData();
+
+    if (
+      aww?.url.includes("gfy") ||
+      aww?.url.endsWith(".gifv") ||
+      aww?.post_hint.includes("video")
+    ) {
+      loadVideo();
+    }
+  }, [aww]);
+
   if (isCreatingUser) {
     return (
       <View style={styles.signUpContainer}>
@@ -312,69 +413,11 @@ export default function App() {
 
   return (
     <>
+      {/* this creates the reference to the Video component in Prize.js */}
+      <Video ref={videoRef} />
       {/* Prize */}
       {isPrizeVisible ? (
-        isTimerDone && (
-          <PrizeModal
-            aww={
-              Object.keys(prizes).length > 0
-                ? prizes[Object.keys(prizes)[0]]
-                : aww
-            }
-            isPrize={Object.keys(prizes).length > 0 ? true : false}
-            onClose={async (isPrize, prizeId) => {
-              if (isPrize) {
-                delete prizes[prizeId];
-                if (Object.keys(prizes).length > 0) {
-                  await AsyncStorage.setItem(
-                    `${appNamespace}prizes`,
-                    JSON.stringify(prizes)
-                  );
-                } else {
-                  await AsyncStorage.removeItem(`${appNamespace}prizes`);
-                }
-              }
-              dispatch({ type: ACTION_TYPES.RESET });
-            }}
-            // route user to sign up if they aren't logged in?
-            // is now routing user to sign up
-            // but how can we handle after the sign up since it takes them
-            // back to the choose time view?
-            ShareBtn={() =>
-              currentUser ? (
-                <TouchableOpacity
-                  onPress={() => dispatch({ type: ACTION_TYPES.SHARE_PRIZE })}
-                  style={styles.button}
-                >
-                  <Text
-                    style={{
-                      color: "white",
-                      fontSize: 18,
-                      textAlign: "center",
-                    }}
-                  >
-                    {`Share\n( because you care ʕ๑•ᴥ•ʔ )`}
-                  </Text>
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  onPress={() => dispatch({ type: ACTION_TYPES.RESET })}
-                  style={styles.button}
-                >
-                  <Text
-                    style={{
-                      color: "white",
-                      fontSize: 18,
-                      textAlign: "center",
-                    }}
-                  >
-                    Good job!
-                  </Text>
-                </TouchableOpacity>
-              )
-            }
-          />
-        )
+        isTimerDone && <PrizeWithForwardedRef ref={videoRef} />
       ) : (
         <ViewPager initialPage={0} style={styles.container}>
           {/* View pager provides the swiping/carousel like function */}
@@ -475,11 +518,18 @@ export default function App() {
               {isTimerDone && !isSharing && (
                 <TouchableOpacity
                   style={styles.button}
-                  onPress={() =>
+                  onPress={async () => {
+                    if (
+                      aww?.post_hint.includes("video") ||
+                      aww?.post_hint.includes("link")
+                    ) {
+                      console.log(aww);
+                      await videoRef.current.presentFullscreenPlayerAsync();
+                    }
                     dispatch({
                       type: ACTION_TYPES.COLLECT_PRIZE,
-                    })
-                  }
+                    });
+                  }}
                 >
                   <Text style={styles.buttonText}>
                     🎁 <Text style={{ fontWeight: "300" }}>ʕ•ᴥ•ʔ</Text>
@@ -496,7 +546,10 @@ export default function App() {
                   }
                   error={error}
                   friends={friends}
-                  onClose={() => dispatch({ type: ACTION_TYPES.RESET })}
+                  onClose={() => {
+                    setAww(null);
+                    dispatch({ type: ACTION_TYPES.RESET });
+                  }}
                 />
               )}
             </View>
