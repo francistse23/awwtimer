@@ -606,6 +606,10 @@ function scheduleLocalNotification(timerEndDate) {
     title: "Aww Timer",
     body: "Good job! Open your reward and take a break!",
     data: { isTimerDone: true },
+    ios: {
+      sound: true,
+      _displayInForeground: true,
+    },
   };
 
   const schedulingOptions = {
