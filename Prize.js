@@ -4,7 +4,6 @@ import { Video } from "expo-av";
 import GestureRecognizer, {
   swipeDirections,
 } from "react-native-swipe-gestures";
-const quokka = require("./assets/quokka.png");
 
 // will prioritize prizes if there are any
 // otherwise will draw from random
@@ -28,6 +27,9 @@ export default function Prize({ aww, isPrize, onClose, ShareBtn }) {
     }
   };
 
+  const maybeImage = getImageUrlIfExists(aww);
+  const maybeVideo = getVideoUrlIfExists(aww);
+
   return (
     <GestureRecognizer
       config={config}
@@ -48,35 +50,24 @@ export default function Prize({ aww, isPrize, onClose, ShareBtn }) {
           </>
         )}
 
-        {!isLoading && <ShareBtn />}
+        {maybeImage && (
+          <>
+            <Image
+              resizeMode="contain"
+              source={{
+                uri: maybeImage,
+              }}
+              style={{
+                width: Dimensions.get("window").width * 0.65,
+                height: Dimensions.get("window").height * 0.65,
+              }}
+            />
 
-        {aww.url.endsWith(".jpg") && (
-          <Image
-            resizeMode="contain"
-            source={{
-              uri: aww.url,
-            }}
-            style={{
-              width: Dimensions.get("window").width * 0.65,
-              height: Dimensions.get("window").height * 0.65,
-            }}
-          />
+            <Text>{aww.title}</Text>
+          </>
         )}
 
-        {aww?.secure_media?.oembed && (
-          <Image
-            resizeMode="contain"
-            source={{
-              uri: aww.secure_media.oembed.thumbnail_url,
-            }}
-            style={{
-              width: Dimensions.get("window").width * 0.65,
-              height: Dimensions.get("window").height * 0.65,
-            }}
-          />
-        )}
-
-        {!aww.url.endsWith(".jpg") && (
+        {!maybeImage && maybeVideo && (
           <>
             <Video
               isLooping
@@ -89,20 +80,38 @@ export default function Prize({ aww, isPrize, onClose, ShareBtn }) {
               resizeMode="contain"
               shouldPlay
               source={{
-                uri:
-                  aww?.crosspost_parent_list?.length > 0
-                    ? aww.crosspost_parent_list[0].secure_media.reddit_video
-                        .fallback_url
-                    : aww.secure_media?.reddit_video?.fallback_url,
+                uri: maybeVideo,
               }}
               style={{ flex: 1 }}
               useNativeControls
             />
           </>
         )}
+
+        {!isLoading && <ShareBtn />}
       </View>
     </GestureRecognizer>
   );
+}
+
+function getImageUrlIfExists(aww) {
+  if (aww.url.endsWith(".jpg")) {
+    return aww.url;
+  }
+
+  if (aww?.secure_media?.oembed) {
+    return aww.secure_media.oembed.thumbnail_url;
+  }
+
+  return null;
+}
+
+function getVideoUrlIfExists(aww) {
+  if (aww?.crosspost_parent_list?.length > 0) {
+    return aww.crosspost_parent_list[0].secure_media.reddit_video.fallback_url;
+  }
+
+  return aww.secure_media?.reddit_video?.fallback_url;
 }
 
 const styles = StyleSheet.create({
