@@ -30,6 +30,15 @@ export const ACTION_TYPES = {
   CREATE_USER: "CREATE_USER",
 };
 
+// state machine values
+const VIEW_STATES = {
+  INITIAL: "INITIAL",
+  CREATING_USER: "CREATING_USER",
+  TIMER_RUNNING: "TIMER_RUNNING",
+  COLLECTING_PRIZE: "COLLECTING_PRIZE",
+  SHOWING_PRIZE: "SHOWING_PRIZE",
+};
+
 const initialState = {
   isPrizeVisible: false,
   timer: 0,
@@ -38,6 +47,7 @@ const initialState = {
   isSharing: false,
   isCreatingUser: false,
   timerEndDate: null,
+  currentViewState: VIEW_STATES.INITIAL,
 };
 
 const appNamespace = "awwtimer-";
@@ -72,6 +82,7 @@ function reducer(state, action) {
         isTimerStarted: true,
         timer: Math.ceil((timerEndDate - new Date().getTime()) / 1000),
         timerEndDate,
+        currentViewState: VIEW_STATES.TIMER_RUNNING,
       };
     case ACTION_TYPES.TIMER_TICK:
       return {
@@ -88,6 +99,7 @@ function reducer(state, action) {
       return {
         ...state,
         isPrizeVisible: true,
+        currentViewState: VIEW_STATES.COLLECTING_PRIZE,
       };
     case ACTION_TYPES.SHARE_PRIZE:
       return {
@@ -98,6 +110,7 @@ function reducer(state, action) {
     case ACTION_TYPES.CREATE_USER:
       return {
         ...initialState,
+        currentViewState: VIEW_STATES.CREATING_USER,
         isCreatingUser: true,
       };
     default:
@@ -123,6 +136,7 @@ export default function App() {
     isTimerStarted,
     isSharing,
     isCreatingUser,
+    currentViewState,
   } = timerState;
 
   async function getFriends(currentUser) {
