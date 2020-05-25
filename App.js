@@ -119,33 +119,6 @@ export default function App() {
 
   const { timer, timerEndDate, currentViewState } = timerState;
 
-  async function getFriends(currentUser) {
-    try {
-      setError(null);
-      console.log(`finding friends for ${currentUser}`);
-
-      // currentUser will log the username with #xxxx
-      // split to get the username only
-      let response = await fetch(
-        `https://awwtimer.firebaseio.com/friends/${
-          currentUser?.split("#")[0]
-        }.json`
-      );
-
-      let responseJson = await response.json();
-
-      const friends = Object.entries(responseJson).map(
-        ([username, isFriend]) => {
-          if (isFriend) return username;
-        }
-      );
-
-      setFriends(friends);
-    } catch (error) {
-      setError("could not get friends", error);
-    }
-  }
-
   async function login() {
     try {
       const secureStoreOptions = {
@@ -160,7 +133,9 @@ export default function App() {
 
       if (user) {
         setCurrentUser(user);
-        getFriends(user);
+        getFriends(user)
+          .then((friends) => setFriends(friends))
+          .catch((error) => setError(error));
         getPrizes(user).then((prizes) => setPrizes(prizes));
       }
     } catch (err) {
@@ -387,14 +362,20 @@ export default function App() {
                 currentUser={currentUser}
                 error={error}
                 friends={friends}
-                getFriends={() => getFriends(currentUser?.split("#")[0])}
+                getFriends={() =>
+                  getFriends(currentUser)
+                    .then((friends) => setFriends(friends))
+                    .catch((error) => setError(error))
+                }
                 isViewing={true}
                 refreshControl={
                   <RefreshControl
                     refreshing={refreshing}
                     onRefresh={() => {
                       setRefreshing(true);
-                      getFriends(currentUser?.split("#")[0]);
+                      getFriends(currentUser)
+                        .then((friends) => setFriends(friends))
+                        .catch((error) => setError(error));
                       setRefreshing(false);
                     }}
                   />
@@ -611,5 +592,34 @@ async function getPrizes(user) {
   } catch (error) {
     console.error(error);
     return NO_PRIZES;
+  }
+}
+
+async function getFriends(currentUser) {
+  console.log(`retrieving ${currentUser} friends`);
+  try {
+    // currentUser will log the username with #xxxx
+    // split to get the username only
+    let response = await fetch(
+      `https://awwtimer.firebaseio.com/friends/${
+        currentUser?.split("#")[0]
+      }.json`
+    );
+
+    const responseJson = await response.json();
+
+    if (!responseJson) {
+      console.log(`unpopular user, no friends for ${currentUser}`);
+      return [];
+    }
+
+    const friends = Object.entries(responseJson).map(([username, isFriend]) => {
+      if (isFriend) return username;
+    });
+
+    return friends;
+  } catch (error) {
+    console.error(error);
+    throw error;
   }
 }
