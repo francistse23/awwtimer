@@ -158,9 +158,7 @@ export default function App() {
         const timeRemaining = Math.ceil((timerEndDate - now) / 1000);
         if (timeRemaining < 0) {
           if (currentUser) {
-            getPrizes(currentUser.split("#")[0]).then((prizes) =>
-              setPrizes(prizes)
-            );
+            getPrizes(currentUser).then((prizes) => setPrizes(prizes));
           }
 
           dispatch({ type: ACTION_TYPES.TIMER_DONE });
@@ -295,9 +293,7 @@ export default function App() {
               refreshing={refreshing}
               onRefresh={() => {
                 setRefreshing(true);
-                getPrizes(currentUser?.split("#")[0]).then((prizes) =>
-                  setPrizes(prizes)
-                );
+                getPrizes(currentUser).then((prizes) => setPrizes(prizes));
                 setRefreshing(false);
               }}
             />
