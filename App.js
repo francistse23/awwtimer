@@ -68,6 +68,9 @@ function reducer(state, action) {
        */
       scheduleLocalNotification(timerEndDate);
 
+      // run any side effects
+      action.thunk && action.thunk();
+
       /*
        * Handle case 1 by setting timerEndDate in local state. The view will
        * show the difference between the end date and system time.
@@ -223,6 +226,7 @@ export default function App() {
   }
 
   async function getData() {
+    console.log("retrieving data from reddit");
     // https://www.reddit.com/dev/api/
     // limit - the maximum number of items to return in this slice of the listing.
     // after - indicate fullname of an item in the listing to use as the anchor point of the slice.
@@ -265,8 +269,6 @@ export default function App() {
   // between it and the timerEndDate
   React.useEffect(() => {
     let runTimer;
-
-    getData();
 
     if (timerEndDate) {
       runTimer = setInterval(() => {
@@ -443,6 +445,9 @@ export default function App() {
                     dispatch({
                       type: ACTION_TYPES.START_TIME,
                       durationInSeconds: time,
+                      thunk: () => {
+                        getData();
+                      },
                     })
                   }
                 />
