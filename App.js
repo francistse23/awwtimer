@@ -225,30 +225,6 @@ export default function App() {
     }
   }
 
-  async function getData() {
-    console.log("retrieving data from reddit");
-    // https://www.reddit.com/dev/api/
-    // limit - the maximum number of items to return in this slice of the listing.
-    // after - indicate fullname of an item in the listing to use as the anchor point of the slice.
-    const response = await fetch(
-      `https://www.reddit.com/r/aww/hot.json?limit=1${
-        after ? `&after=${after}` : ""
-      }`
-    );
-    const data = await response.json();
-
-    setAfter(data.data.after);
-
-    const [aww] = data?.data?.children?.map((c) => c.data) ?? [];
-
-    // const posts = data?.data?.children?.map((c) => c.data) ?? [];
-    // const randomIndex = Math.floor(Math.random() * posts.length);
-    // const aww = posts[randomIndex];
-    // const images = posts.filter((p) => p.url.endsWith(".jpg"));
-
-    setAww(aww);
-  }
-
   React.useEffect(() => {
     const unsubscribeFromNotifications = Notifications.addListener(
       (notification) => {
@@ -445,8 +421,10 @@ export default function App() {
                     dispatch({
                       type: ACTION_TYPES.START_TIME,
                       durationInSeconds: time,
-                      thunk: () => {
-                        getData();
+                      thunk: async () => {
+                        const result = await getData(after);
+                        setAww(result.aww);
+                        setAfter(result.cursor);
                       },
                     })
                   }
@@ -602,4 +580,31 @@ function scheduleLocalNotification(timerEndDate) {
   )
     .then(() => console.log("schedule notification"))
     .catch((err) => console.error(err));
+}
+
+async function getData(after) {
+  console.log("retrieving aww from reddit");
+
+  // https://www.reddit.com/dev/api/
+  // limit - the maximum number of items to return in this slice of the listing.
+  // after - indicate fullname of an item in the listing to use as the anchor point of the slice.
+  const response = await fetch(
+    `https://www.reddit.com/r/aww/hot.json?limit=1${
+      after ? `&after=${after}` : ""
+    }`
+  );
+
+  const data = await response.json();
+  const cursor = data.data.after;
+  const [aww] = data?.data?.children?.map((c) => c.data) ?? [];
+
+  // const posts = data?.data?.children?.map((c) => c.data) ?? [];
+  // const randomIndex = Math.floor(Math.random() * posts.length);
+  // const aww = posts[randomIndex];
+  // const images = posts.filter((p) => p.url.endsWith(".jpg"));
+
+  return {
+    aww,
+    cursor,
+  };
 }
