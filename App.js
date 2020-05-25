@@ -133,14 +133,15 @@ export default function App() {
     );
 
     // start getting stuff
-    const user = getStoredUserInfo();
-    if (user) {
+    getStoredUserInfo().then((user) => {
+      if (!user) return;
+
       setCurrentUser(user);
       getFriends(user)
         .then((friends) => setFriends(friends))
         .catch((error) => setError(error));
       getPrizes(user).then((prizes) => setPrizes(prizes));
-    }
+    });
 
     askForNotificationPermissions();
 
