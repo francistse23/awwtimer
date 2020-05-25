@@ -146,63 +146,6 @@ export default function App() {
     }
   }
 
-  // https://reactnative.dev/docs/asyncstorage.html
-  // supposed to be deprecated
-  // but expo has issues with the independent package
-  async function getPrizes(user) {
-    try {
-      if (user) {
-        // await AsyncStorage.removeItem(`${appNamespace}prizes`);
-
-        // prizes from local storage
-        let prizesInStorage = JSON.parse(
-          await AsyncStorage.getItem(`${appNamespace}prizes`)
-        );
-
-        // console.log("prizes in storage", prizesInStorage);
-
-        // prizes from database
-        let response = await fetch(
-          `https://awwtimer.firebaseio.com/prizes/${user.split("#")[0]}.json`
-        );
-
-        let prizesJson = await response.json();
-
-        // console.log("prizes from db", prizesJson);
-
-        if (prizesInStorage || prizesJson) {
-          const data =
-            prizesInStorage && prizesJson
-              ? { ...prizesInStorage, ...prizesJson }
-              : prizesInStorage && !prizesJson
-              ? prizesInStorage
-              : prizesJson;
-
-          await AsyncStorage.setItem(
-            `${appNamespace}prizes`,
-            JSON.stringify(data)
-          );
-
-          setPrizes(data);
-
-          // delete prizes from database since it's now transferred to local storage
-          await fetch(
-            `https://awwtimer.firebaseio.com/prizes/${user.split("#")[0]}.json`,
-            {
-              headers: {
-                "Content-Type": "application/json",
-              },
-              method: "delete",
-              mode: "cors",
-            }
-          );
-        }
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
   async function login() {
     try {
       const secureStoreOptions = {
@@ -218,7 +161,7 @@ export default function App() {
       if (user) {
         setCurrentUser(user);
         getFriends(user);
-        getPrizes(user);
+        getPrizes(user).then((prizes) => setPrizes(prizes));
       }
     } catch (err) {
       throw new Error(err);
@@ -252,7 +195,9 @@ export default function App() {
         const timeRemaining = Math.ceil((timerEndDate - now) / 1000);
         if (timeRemaining < 0) {
           if (currentUser) {
-            getPrizes(currentUser.split("#")[0]);
+            getPrizes(currentUser.split("#")[0]).then((prizes) =>
+              setPrizes(prizes)
+            );
           }
 
           dispatch({ type: ACTION_TYPES.TIMER_DONE });
@@ -387,7 +332,9 @@ export default function App() {
               refreshing={refreshing}
               onRefresh={() => {
                 setRefreshing(true);
-                getPrizes(currentUser?.split("#")[0]);
+                getPrizes(currentUser?.split("#")[0]).then((prizes) =>
+                  setPrizes(prizes)
+                );
                 setRefreshing(false);
               }}
             />
@@ -607,4 +554,62 @@ async function getData(after) {
     aww,
     cursor,
   };
+}
+
+// https://reactnative.dev/docs/asyncstorage.html
+// supposed to be deprecated
+// but expo has issues with the independent package
+async function getPrizes(user) {
+  console.log("fetching prizes from Firebase");
+
+  const NO_PRIZES = {};
+
+  if (!user) {
+    console.log("no prizes, no user found");
+    return NO_PRIZES;
+  }
+
+  try {
+    // await AsyncStorage.removeItem(`${appNamespace}prizes`);
+
+    // prizes from local storage
+    let prizesInStorage = JSON.parse(
+      await AsyncStorage.getItem(`${appNamespace}prizes`)
+    );
+
+    let response = await fetch(
+      `https://awwtimer.firebaseio.com/prizes/${user.split("#")[0]}.json`
+    );
+
+    let prizesJson = await response.json();
+
+    if (!prizesInStorage && !prizesJson) {
+      console.log("no prizes, unpopular user");
+      return NO_PRIZES;
+    }
+
+    const data =
+      prizesInStorage && prizesJson
+        ? { ...prizesInStorage, ...prizesJson }
+        : prizesInStorage && !prizesJson
+        ? prizesInStorage
+        : prizesJson;
+
+    AsyncStorage.setItem(`${appNamespace}prizes`, JSON.stringify(data));
+
+    // delete prizes from database since it's now transferred to local storage
+    fetch(`https://awwtimer.firebaseio.com/prizes/${user.split("#")[0]}.json`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "delete",
+      mode: "cors",
+    });
+
+    console.log("some prizes found");
+    return data;
+  } catch (error) {
+    console.error(error);
+    return NO_PRIZES;
+  }
 }
