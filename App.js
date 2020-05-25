@@ -119,30 +119,9 @@ export default function App() {
 
   const { timer, timerEndDate, currentViewState } = timerState;
 
-  async function login() {
-    try {
-      const secureStoreOptions = {
-        keychainService: Platform.OS === "ios" ? "iOS" : "Android",
-      };
-
-      // should return username#code
-      let user = await SecureStore.getItemAsync(
-        `${appNamespace}username`,
-        secureStoreOptions
-      );
-
-      if (user) {
-        setCurrentUser(user);
-        getFriends(user)
-          .then((friends) => setFriends(friends))
-          .catch((error) => setError(error));
-        getPrizes(user).then((prizes) => setPrizes(prizes));
-      }
-    } catch (err) {
-      throw new Error(err);
-    }
-  }
-
+  /*
+   * The componentDidMount logic. This runs only on app init b/c of the [] as a dependency
+   */
   React.useEffect(() => {
     const unsubscribeFromNotifications = Notifications.addListener(
       (notification) => {
@@ -153,7 +132,16 @@ export default function App() {
       }
     );
 
-    login();
+    // start getting stuff
+    const user = getStoredUserInfo();
+    if (user) {
+      setCurrentUser(user);
+      getFriends(user)
+        .then((friends) => setFriends(friends))
+        .catch((error) => setError(error));
+      getPrizes(user).then((prizes) => setPrizes(prizes));
+    }
+
     askForNotificationPermissions();
 
     return () => unsubscribeFromNotifications.remove();
@@ -622,4 +610,16 @@ async function getFriends(currentUser) {
     console.error(error);
     throw error;
   }
+}
+
+async function getStoredUserInfo() {
+  const secureStoreOptions = {
+    keychainService: Platform.OS === "ios" ? "iOS" : "Android",
+  };
+
+  // should return username#code
+  return await SecureStore.getItemAsync(
+    `${appNamespace}username`,
+    secureStoreOptions
+  );
 }
