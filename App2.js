@@ -12,7 +12,7 @@ import {
 import ViewPager from "@react-native-community/viewpager";
 import * as SecureStore from "expo-secure-store";
 import SignUpForm from "./SignUpForm";
-import PrizeModal from "./Prize";
+import Prize from "./Prize";
 import FriendsList from "./FriendsList";
 import { Notifications } from "expo";
 import * as Permissions from "expo-permissions";
@@ -171,35 +171,27 @@ export default function App({ videoRef }) {
   }, [timerEndDate]);
 
   if (currentViewState === VIEW_STATES.VIEWING_PRIZE) {
-    if (!aww) {
-      console.error("NO AWW SET");
+    let prize =
+      Object.keys(prizes).length > 0 ? prizes[Object.keys(prizes)[0]] : aww;
+
+    if (!prize) {
+      console.error("NO AWW/PRIZE SET");
       return;
     }
 
-    if (isVideo(aww)) {
+    if (isVideo(prize)) {
       videoRef.presentFullscreenPlayer();
     }
 
     return (
-      <PrizeModal
+      <Prize
         aww={
           Object.keys(prizes).length > 0 ? prizes[Object.keys(prizes)[0]] : aww
         }
         isPrize={Object.keys(prizes).length > 0 ? true : false}
-        onClose={async (isPrize, prizeId) => {
-          if (isPrize) {
-            delete prizes[prizeId];
-            if (Object.keys(prizes).length > 0) {
-              await AsyncStorage.setItem(
-                `${appNamespace}prizes`,
-                JSON.stringify(prizes)
-              );
-            } else {
-              await AsyncStorage.removeItem(`${appNamespace}prizes`);
-            }
-          }
-          dispatch({ type: ACTION_TYPES.RESET });
-        }}
+        onClose={(isPrize, prizeId) =>
+          handleClose(isPrize, prizeId, prizes, dispatch)
+        }
         // route user to sign up if they aren't logged in?
         // is now routing user to sign up
         // but how can we handle after the sign up since it takes them
@@ -237,6 +229,28 @@ export default function App({ videoRef }) {
             </TouchableOpacity>
           )
         }
+        NextBtn={({ isPrize, prizeId }) =>
+          currentUser &&
+          Object.keys(prizes).length > 1 && (
+            <TouchableOpacity
+              onPress={() => {
+                handleClose(isPrize, prizeId, prizes, dispatch, videoRef, true);
+              }}
+              style={styles.button}
+            >
+              <Text
+                style={{
+                  ...styles.buttonText,
+                  fontSize: 16,
+                  fontWeight: "normal",
+                }}
+              >
+                Next Prize
+              </Text>
+            </TouchableOpacity>
+          )
+        }
+        videoRef={videoRef}
       />
     );
   }
@@ -312,7 +326,9 @@ export default function App({ videoRef }) {
               ( ∩ˇωˇ∩)♡
             </Text>
             {Object.keys(prizes).length > 0 && (
-              <Text>{Object.keys(prizes).length} prizes waiting for you!</Text>
+              <Text style={{ fontSize: 18, textAlign: "center" }}>
+                {Object.keys(prizes).length} prizes waiting for you!
+              </Text>
             )}
           </View>
 
@@ -336,13 +352,21 @@ export default function App({ videoRef }) {
                       type: ACTION_TYPES.START_TIME,
                       durationInSeconds: time,
                       thunk: async () => {
-                        console.log("retrieving data");
-                        const { aww, cursor } = await getData(after);
-                        if (isVideo(aww)) {
-                          loadVideo(videoRef, aww);
+                        if (Object.keys(prizes).length > 0) {
+                          let aww = prizes[Object.keys(prizes)[0]];
+                          console.log("aww in thunk", aww);
+                          if (isVideo(aww)) {
+                            loadVideo(videoRef, aww);
+                          }
+                        } else {
+                          console.log("retrieving data");
+                          const { aww, cursor } = await getData(after);
+                          if (isVideo(aww)) {
+                            loadVideo(videoRef, aww);
+                          }
+                          setAww(aww);
+                          setAfter(cursor);
                         }
-                        setAww(aww);
-                        setAfter(cursor);
                       },
                     })
                   }
@@ -654,10 +678,34 @@ async function loadVideo(videoRef, aww) {
       { isLooping: true }
     );
 
-    console.log("video loaded?", uri, res);
+    console.log("video loaded?", uri, res, aww);
   } catch (err) {
     console.error(err);
   }
+}
+
+async function handleClose(
+  isPrize,
+  prizeId,
+  prizes,
+  dispatch,
+  videoRef = null,
+  viewingNext = false
+) {
+  if (isPrize) {
+    delete prizes[prizeId];
+    if (Object.keys(prizes).length > 0) {
+      await AsyncStorage.setItem(
+        `${appNamespace}prizes`,
+        JSON.stringify(prizes)
+      );
+      loadVideo(videoRef, prizes[Object.keys(prizes)[0]]);
+    } else {
+      await AsyncStorage.removeItem(`${appNamespace}prizes`);
+    }
+  }
+  if (viewingNext) dispatch({ type: ACTION_TYPES.COLLECT_PRIZE });
+  else dispatch({ type: ACTION_TYPES.RESET });
 }
 
 function isVideo(aww) {

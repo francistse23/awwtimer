@@ -1,5 +1,12 @@
 import React from "react";
-import { Dimensions, Image, StyleSheet, Text, View } from "react-native";
+import {
+  Dimensions,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import GestureRecognizer, {
   swipeDirections,
 } from "react-native-swipe-gestures";
@@ -7,7 +14,16 @@ import GestureRecognizer, {
 // will prioritize prizes if there are any
 // otherwise will draw from random
 // viewed prizes will be deleted from local storage on close
-export default function Prize({ aww, isPrize, onClose, ShareBtn }) {
+export default function Prize({
+  aww,
+  isPrize,
+  onClose,
+  ShareBtn,
+  NextBtn,
+  videoRef,
+}) {
+  const [isLoading, setLoading] = React.useState(false);
+
   const config = {
     velocityThreshold: 0.3,
     directionalOffsetThreshold: 80,
@@ -32,11 +48,15 @@ export default function Prize({ aww, isPrize, onClose, ShareBtn }) {
       style={{ flex: 1 }}
     >
       <View style={styles.container}>
-        <Text style={{ fontSize: 28, textAlign: "center", paddingBottom: 15 }}>
-          🎁incoming!
-        </Text>
+        {isLoading && (
+          <Text
+            style={{ fontSize: 28, textAlign: "center", paddingBottom: 15 }}
+          >
+            🎁incoming!
+          </Text>
+        )}
 
-        {maybeImage && (
+        {maybeImage ? (
           <>
             <Image
               resizeMode="contain"
@@ -44,15 +64,32 @@ export default function Prize({ aww, isPrize, onClose, ShareBtn }) {
                 uri: maybeImage,
               }}
               style={{
-                width: Dimensions.get("window").width * 0.65,
-                height: Dimensions.get("window").height * 0.65,
+                width: Dimensions.get("window").width * 0.8,
+                height: Dimensions.get("window").height * 0.45,
               }}
             />
-
-            <Text>{aww.title}</Text>
           </>
+        ) : (
+          <TouchableOpacity
+            onPress={() => {
+              videoRef.presentFullscreenPlayer();
+            }}
+          >
+            <Image
+              resizeMode="contain"
+              source={{
+                uri: aww.thumbnail,
+              }}
+              style={{
+                width: Dimensions.get("window").width * 0.8,
+                height: Dimensions.get("window").height * 0.45,
+              }}
+            />
+          </TouchableOpacity>
         )}
+        <Text style={{ paddingHorizontal: 12 }}>{aww.title}</Text>
 
+        <NextBtn isPrize={isPrize} prizeId={aww.id} />
         <ShareBtn />
       </View>
     </GestureRecognizer>
@@ -83,6 +120,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#ffb6b6",
     flex: 1,
-    paddingVertical: 60,
+    // paddingVertical: 60,
   },
 });

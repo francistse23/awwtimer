@@ -1,8 +1,5 @@
 import React from "react";
 import { Text, TouchableOpacity, View, StyleSheet } from "react-native";
-import GestureRecognizer, {
-  swipeDirections,
-} from "react-native-swipe-gestures";
 
 // https://reactnative.dev/docs/transforms
 export const ChooseTime = ({ startTimer }) => (
