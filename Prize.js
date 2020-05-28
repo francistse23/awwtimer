@@ -69,7 +69,7 @@ export default function Prize({
           </>
         )}
 
-        {!maybeImage && maybeVideo && (
+        {/* {!maybeImage && maybeVideo && (
           <>
             <Video
               ref={forwardedRef}
@@ -88,7 +88,7 @@ export default function Prize({
               useNativeControls
             />
           </>
-        )}
+        )} */}
 
         {!isLoading && <ShareBtn />}
       </View>
