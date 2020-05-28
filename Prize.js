@@ -67,7 +67,7 @@ export default function Prize({ aww, isPrize, onClose, ShareBtn }) {
           </>
         )}
 
-        {!maybeImage && maybeVideo && (
+        {/* {!maybeImage && maybeVideo && (
           <>
             <Video
               isLooping
@@ -86,7 +86,7 @@ export default function Prize({ aww, isPrize, onClose, ShareBtn }) {
               useNativeControls
             />
           </>
-        )}
+        )} */}
 
         {!isLoading && <ShareBtn />}
       </View>
