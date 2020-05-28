@@ -1,12 +1,5 @@
 import React from "react";
-import {
-  Dimensions,
-  Image,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Dimensions, Image, StyleSheet, Text, View } from "react-native";
 import { Video } from "expo-av";
 import GestureRecognizer, {
   swipeDirections,
@@ -39,6 +32,9 @@ export default function Prize({
     }
   };
 
+  const maybeImage = getImageUrlIfExists(aww);
+  const maybeVideo = getVideoUrlIfExists(aww);
+
   return (
     <GestureRecognizer
       config={config}
@@ -56,43 +52,31 @@ export default function Prize({
           </>
         )}
 
-        {!isLoading && <ShareBtn />}
+        {maybeImage && (
+          <>
+            <Image
+              resizeMode="contain"
+              source={{
+                uri: maybeImage,
+              }}
+              style={{
+                width: Dimensions.get("window").width * 0.65,
+                height: Dimensions.get("window").height * 0.65,
+              }}
+            />
 
-        <Text style={{ paddingHorizontal: 18, textAlign: "center" }}>
-          {aww.title}
-        </Text>
-
-        {(aww.url.endsWith(".jpg") ||
-          aww.url.endsWith(".png") ||
-          aww.url.endsWith(".gif") ||
-          !aww.post_hint.includes("video")) && (
-          <Image
-            resizeMode="contain"
-            source={{
-              uri: aww.url,
-            }}
-            style={{
-              borderRadius: 5,
-              height: Dimensions.get("window").height * 0.75,
-              width: Dimensions.get("window").width * 0.75,
-            }}
-          />
+            <Text>{aww.title}</Text>
+          </>
         )}
 
-        {/* removed gif rendering using secure_media */}
-        {/* not all gifs have secure_media */}
-
-        {(aww.url.includes("gfy") ||
-          aww.url.endsWith(".gifv") ||
-          aww.post_hint.includes("video")) &&
-          !isLoading && (
+        {!maybeImage && maybeVideo && (
+          <>
             <Video
               ref={forwardedRef}
               resizeMode="contain"
-              posterSource={{ uri: aww.thumbnail }}
-              posterStyle={{
-                height: 300,
-                width: 300,
+              shouldPlay
+              source={{
+                uri: maybeVideo,
               }}
               style={{
                 alignSelf: "center",
@@ -103,10 +87,33 @@ export default function Prize({
               usePoster
               useNativeControls
             />
-          )}
+          </>
+        )}
+
+        {!isLoading && <ShareBtn />}
       </View>
     </GestureRecognizer>
   );
+}
+
+function getImageUrlIfExists(aww) {
+  if (aww.url.endsWith(".jpg")) {
+    return aww.url;
+  }
+
+  if (aww?.secure_media?.oembed) {
+    return aww.secure_media.oembed.thumbnail_url;
+  }
+
+  return null;
+}
+
+function getVideoUrlIfExists(aww) {
+  if (aww?.crosspost_parent_list?.length > 0) {
+    return aww.crosspost_parent_list[0].secure_media.reddit_video.fallback_url;
+  }
+
+  return aww.secure_media?.reddit_video?.fallback_url;
 }
 
 const styles = StyleSheet.create({

@@ -27,17 +27,22 @@ export const ACTION_TYPES = {
   TIMER_DONE: "TIMER_DONE",
   COLLECT_PRIZE: "COLLECT_PRIZE",
   SHARE_PRIZE: "SHARE_PRIZE",
-  CREATE_USER: "CREATE_USER",
+};
+
+// state machine values
+const VIEW_STATES = {
+  INITIAL: "INITIAL",
+  TIMER_RUNNING: "TIMER_RUNNING",
+  TIMER_DONE: "TIMER_DONE",
+  COLLECTING_PRIZE: "COLLECTING_PRIZE",
+  VIEWING_PRIZE: "VIEWING_PRIZE",
+  SHARING_PRIZE: "SHARING_PRIZE",
 };
 
 const initialState = {
-  isPrizeVisible: false,
   timer: 0,
-  isTimerStarted: false,
-  isTimerDone: false,
-  isSharing: false,
-  isCreatingUser: false,
   timerEndDate: null,
+  currentViewState: VIEW_STATES.INITIAL,
 };
 
 const appNamespace = "awwtimer-";
@@ -69,9 +74,9 @@ function reducer(state, action) {
        */
       return {
         ...state,
-        isTimerStarted: true,
         timer: Math.ceil((timerEndDate - new Date().getTime()) / 1000),
         timerEndDate,
+        currentViewState: VIEW_STATES.TIMER_RUNNING,
       };
     case ACTION_TYPES.TIMER_TICK:
       return {
@@ -81,24 +86,18 @@ function reducer(state, action) {
     case ACTION_TYPES.TIMER_DONE:
       return {
         ...state,
-        isTimerDone: true,
         timerEndDate: null,
+        currentViewState: VIEW_STATES.TIMER_DONE,
       };
     case ACTION_TYPES.COLLECT_PRIZE:
       return {
         ...state,
-        isPrizeVisible: true,
+        currentViewState: VIEW_STATES.VIEWING_PRIZE,
       };
     case ACTION_TYPES.SHARE_PRIZE:
       return {
         ...state,
-        isSharing: true,
-        isPrizeVisible: false,
-      };
-    case ACTION_TYPES.CREATE_USER:
-      return {
-        ...initialState,
-        isCreatingUser: true,
+        currentViewState: VIEW_STATES.SHARING_PRIZE,
       };
     default:
       throw new Error("get to work");
@@ -115,17 +114,7 @@ export default function App() {
   const [aww, setAww] = React.useState(null);
   const [error, setError] = React.useState(null);
 
-  const videoRef = useRef(null);
-
-  const {
-    timer,
-    timerEndDate,
-    isPrizeVisible,
-    isTimerDone,
-    isTimerStarted,
-    isSharing,
-    isCreatingUser,
-  } = timerState;
+  const { timer, timerEndDate, currentViewState } = timerState;
 
   async function getFriends(currentUser) {
     try {
@@ -354,58 +343,110 @@ export default function App() {
     return () => clearInterval(runTimer);
   }, [timerEndDate]);
 
-  // (async () =>
-  //   console.log(await videoRef.current.presentFullscreenPlayerAsync()))();
-
-  React.useEffect(() => {
-    async function loadVideo() {
-      try {
-        await videoRef?.current?.unloadAsync();
-
-        // console.log(aww);
-
-        const uri =
-          aww?.crosspost_parent_list?.length > 0
-            ? aww.crosspost_parent_list[0].secure_media.reddit_video
-                .fallback_url
-            : aww.post_hint.includes("video")
-            ? // not all media has reddit video child
-              aww.media?.reddit_video?.fallback_url
-            : aww.url;
-
-        const res = await videoRef?.current?.loadAsync(
-          {
-            uri,
-          },
-          { isLooping: true }
-        );
-
-        console.log("video loaded?", uri, res);
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
-    if (!aww) getData();
-
-    if (
-      aww?.url.includes("gfy") ||
-      aww?.url.endsWith(".gifv") ||
-      aww?.post_hint.includes("video")
-    ) {
-      loadVideo();
-    }
-  }, [aww]);
-
-  if (isCreatingUser) {
+  if (currentViewState === VIEW_STATES.VIEWING_PRIZE) {
     return (
-      <View style={styles.signUpContainer}>
-        <Text style={{ fontSize: 36 }}>Create a user 🤗</Text>
-        <SignUpForm
-          onUserCreated={(username) => {
-            setCurrentUser(username);
-            dispatch({ type: ACTION_TYPES.RESET });
-          }}
+      <Prize
+        aww={
+          Object.keys(prizes).length > 0 ? prizes[Object.keys(prizes)[0]] : aww
+        }
+        isPrize={Object.keys(prizes).length > 0 ? true : false}
+        onClose={async (isPrize, prizeId) => {
+          if (isPrize) {
+            delete prizes[prizeId];
+            if (Object.keys(prizes).length > 0) {
+              await AsyncStorage.setItem(
+                `${appNamespace}prizes`,
+                JSON.stringify(prizes)
+              );
+            } else {
+              await AsyncStorage.removeItem(`${appNamespace}prizes`);
+            }
+          }
+          dispatch({ type: ACTION_TYPES.RESET });
+        }}
+        // route user to sign up if they aren't logged in?
+        // is now routing user to sign up
+        // but how can we handle after the sign up since it takes them
+        // back to the choose time view?
+        ShareBtn={() =>
+          currentUser ? (
+            <TouchableOpacity
+              onPress={() => dispatch({ type: ACTION_TYPES.SHARE_PRIZE })}
+              style={styles.button}
+            >
+              <Text
+                style={{
+                  color: "white",
+                  fontSize: 18,
+                  textAlign: "center",
+                }}
+              >
+                {`Share\n( because you care ʕ๑•ᴥ•ʔ )`}
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={() => dispatch({ type: ACTION_TYPES.RESET })}
+              style={styles.button}
+            >
+              <Text
+                style={{
+                  color: "white",
+                  fontSize: 18,
+                  textAlign: "center",
+                }}
+              >
+                Good job!
+              </Text>
+            </TouchableOpacity>
+          )
+        }
+      />
+    );
+  }
+
+  if (currentViewState === VIEW_STATES.TIMER_RUNNING) {
+    return (
+      <View style={styles.container}>
+        <TimerView
+          reset={() => dispatch({ type: ACTION_TYPES.RESET })}
+          timer={timer}
+        />
+      </View>
+    );
+  }
+
+  if (currentViewState === VIEW_STATES.TIMER_DONE) {
+    return (
+      <View style={styles.container}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() =>
+            dispatch({
+              type: ACTION_TYPES.COLLECT_PRIZE,
+            })
+          }
+        >
+          <Text style={styles.buttonText}>
+            🎁 <Text style={{ fontWeight: "300" }}>ʕ•ᴥ•ʔ</Text>
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (currentViewState === VIEW_STATES.SHARING_PRIZE) {
+    return (
+      <View style={styles.container}>
+        <FriendsList
+          aww={
+            Object.keys(prizes).length > 0
+              ? prizes[Object.keys(prizes)[0]]
+              : aww
+          }
+          error={error}
+          friends={friends}
+          onClose={() => dispatch({ type: ACTION_TYPES.RESET })}
         />
       </View>
     );
@@ -413,151 +454,61 @@ export default function App() {
 
   return (
     <>
-      {/* this creates the reference to the Video component in Prize.js */}
-      <Video ref={videoRef} />
-      {/* Prize */}
-      {isPrizeVisible ? (
-        isTimerDone && <PrizeWithForwardedRef ref={videoRef} />
-      ) : (
-        <ViewPager initialPage={0} style={styles.container}>
-          {/* View pager provides the swiping/carousel like function */}
-          {/* https://github.com/react-native-community/react-native-viewpager */}
-          <ScrollView
-            contentContainerStyle={styles.viewContainer}
-            key="main"
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={() => {
-                  setRefreshing(true);
-                  getPrizes(currentUser?.split("#")[0]);
-                  setRefreshing(false);
-                }}
-              />
-            }
-          >
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 36, paddingHorizontal: 12 }}>
-                {`( ∩ˇωˇ∩)♡\nかわいい\nタイマー`}
-              </Text>
-              {Object.keys(prizes).length > 0 && (
-                <Text>
-                  {Object.keys(prizes).length} prizes waiting for you!
-                </Text>
-              )}
-            </View>
-
-            <View
-              style={{
-                alignItems: "center",
-                flex: 2,
+      <ViewPager initialPage={0} style={styles.container}>
+        {/* View pager provides the swiping/carousel like function */}
+        {/* https://github.com/react-native-community/react-native-viewpager */}
+        <ScrollView
+          contentContainerStyle={styles.viewContainer}
+          key="main"
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => {
+                setRefreshing(true);
+                getPrizes(currentUser?.split("#")[0]);
+                setRefreshing(false);
               }}
-            >
-              {!isTimerStarted && !isTimerDone && (
-                <View
-                  style={{
-                    flex: 1,
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <ChooseTime
-                    startTimer={(time) =>
-                      dispatch({
-                        type: ACTION_TYPES.START_TIME,
-                        durationInSeconds: time,
-                      })
-                    }
-                  />
-                  {/* creates/resets user */}
-                  {currentUser ? (
-                    <Button
-                      onPress={() => {
-                        console.log("deleting user");
-                        const secureStoreOptions = {
-                          keychainService:
-                            Platform.OS === "ios" ? "iOS" : "Android",
-                        };
+            />
+          }
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 36, paddingHorizontal: 12 }}>
+              {`( ∩ˇωˇ∩)♡\nかわいい\nタイマー`}
+            </Text>
+            {Object.keys(prizes).length > 0 && (
+              <Text>{Object.keys(prizes).length} prizes waiting for you!</Text>
+            )}
+          </View>
 
-                        SecureStore.deleteItemAsync(
-                          `${appNamespace}username`,
-                          secureStoreOptions
-                        );
-                      }}
-                      title="Reset user"
-                    />
-                  ) : (
-                    <TouchableOpacity
-                      style={[
-                        styles.button,
-                        {
-                          transform: [{ rotate: "5deg" }],
-                        },
-                      ]}
-                      onPress={() =>
-                        dispatch({
-                          type: ACTION_TYPES.CREATE_USER,
-                        })
-                      }
-                    >
-                      <Text style={styles.buttonText}>
-                        Create a user to share
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              )}
-
-              {isTimerStarted && !isTimerDone && (
-                <TimerView
-                  reset={() => dispatch({ type: ACTION_TYPES.RESET })}
-                  timer={timer}
-                />
-              )}
-
-              {isTimerDone && !isSharing && (
-                <TouchableOpacity
-                  style={styles.button}
-                  onPress={async () => {
-                    if (
-                      aww?.post_hint.includes("video") ||
-                      aww?.post_hint.includes("link")
-                    ) {
-                      console.log(aww);
-                      await videoRef.current.presentFullscreenPlayerAsync();
-                    }
+          <View
+            style={{
+              alignItems: "center",
+              flex: 2,
+            }}
+          >
+            {currentViewState === VIEW_STATES.INITIAL && (
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <ChooseTime
+                  startTimer={(time) =>
                     dispatch({
-                      type: ACTION_TYPES.COLLECT_PRIZE,
-                    });
-                  }}
-                >
-                  <Text style={styles.buttonText}>
-                    🎁 <Text style={{ fontWeight: "300" }}>ʕ•ᴥ•ʔ</Text>
-                  </Text>
-                </TouchableOpacity>
-              )}
-
-              {isSharing && (
-                <FriendsList
-                  aww={
-                    Object.keys(prizes).length > 0
-                      ? prizes[Object.keys(prizes)[0]]
-                      : aww
+                      type: ACTION_TYPES.START_TIME,
+                      durationInSeconds: time,
+                    })
                   }
-                  error={error}
-                  friends={friends}
-                  onClose={() => {
-                    setAww(null);
-                    dispatch({ type: ACTION_TYPES.RESET });
-                  }}
                 />
-              )}
-            </View>
-          </ScrollView>
-          {!isTimerStarted && currentUser && (
-            // have to wrap in view
-            // otherwise viewpager doesnt render correctly
-            <View key="friends" style={{ flex: 1, paddingVertical: 60 }}>
+              </View>
+            )}
+          </View>
+        </ScrollView>
+        <View key="friends" style={{ flex: 1, paddingVertical: 60 }}>
+          {currentUser ? (
+            <>
               <FriendsList
                 currentUser={currentUser}
                 error={error}
@@ -575,10 +526,34 @@ export default function App() {
                   />
                 }
               />
+              <Button
+                onPress={() => {
+                  console.log("deleting user");
+                  const secureStoreOptions = {
+                    keychainService: Platform.OS === "ios" ? "iOS" : "Android",
+                  };
+
+                  SecureStore.deleteItemAsync(
+                    `${appNamespace}username`,
+                    secureStoreOptions
+                  );
+                }}
+                title="Reset user"
+              />
+            </>
+          ) : (
+            <View style={styles.signUpContainer}>
+              <Text style={{ fontSize: 36 }}>Create a user 🤗</Text>
+              <SignUpForm
+                onUserCreated={(username) => {
+                  setCurrentUser(username);
+                  dispatch({ type: ACTION_TYPES.RESET });
+                }}
+              />
             </View>
           )}
-        </ViewPager>
-      )}
+        </View>
+      </ViewPager>
     </>
   );
 }
@@ -659,6 +634,10 @@ function scheduleLocalNotification(timerEndDate) {
     title: "Aww Timer",
     body: "Good job! Open your reward and take a break!",
     data: { isTimerDone: true },
+    ios: {
+      sound: true,
+      _displayInForeground: true,
+    },
   };
 
   const schedulingOptions = {
