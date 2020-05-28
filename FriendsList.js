@@ -2,8 +2,6 @@ import React from "react";
 import {
   Alert,
   Dimensions,
-  KeyboardAvoidingView,
-  Platoform,
   StyleSheet,
   Text,
   TextInput,

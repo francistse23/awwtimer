@@ -1,8 +1,6 @@
 import React, { useState, useReducer } from "react";
 import {
   AsyncStorage,
-  Button,
-  KeyboardAvoidingView,
   Platform,
   RefreshControl,
   ScrollView,
@@ -19,7 +17,6 @@ import FriendsList from "./FriendsList";
 import { Notifications } from "expo";
 import * as Permissions from "expo-permissions";
 import { TimerView, ChooseTime } from "./Timer";
-import { Video } from "expo-av";
 
 export const ACTION_TYPES = {
   RESET: "RESET",
@@ -380,7 +377,7 @@ export default function App({ videoRef }) {
                   />
                 }
               />
-              <Button
+              <TouchableOpacity
                 onPress={() => {
                   console.log("deleting user");
                   const secureStoreOptions = {
@@ -392,8 +389,10 @@ export default function App({ videoRef }) {
                     secureStoreOptions
                   );
                 }}
-                title="Reset user"
-              />
+                style={styles.button}
+              >
+                <Text style={styles.buttonText}>Reset User</Text>
+              </TouchableOpacity>
             </>
           ) : (
             <View style={styles.signUpContainer}>

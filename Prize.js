@@ -1,6 +1,5 @@
 import React from "react";
 import { Dimensions, Image, StyleSheet, Text, View } from "react-native";
-import { Video } from "expo-av";
 import GestureRecognizer, {
   swipeDirections,
 } from "react-native-swipe-gestures";
