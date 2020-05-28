@@ -8,15 +8,7 @@ import GestureRecognizer, {
 // will prioritize prizes if there are any
 // otherwise will draw from random
 // viewed prizes will be deleted from local storage on close
-export default function Prize({
-  aww,
-  isPrize,
-  onClose,
-  ShareBtn,
-  forwardedRef,
-}) {
-  const [isLoading, setLoading] = React.useState(false);
-
+export default function Prize({ aww, isPrize, onClose, ShareBtn }) {
   const config = {
     velocityThreshold: 0.3,
     directionalOffsetThreshold: 80,
@@ -33,7 +25,6 @@ export default function Prize({
   };
 
   const maybeImage = getImageUrlIfExists(aww);
-  const maybeVideo = getVideoUrlIfExists(aww);
 
   return (
     <GestureRecognizer
@@ -42,15 +33,9 @@ export default function Prize({
       style={{ flex: 1 }}
     >
       <View style={styles.container}>
-        {isLoading && (
-          <>
-            <Text
-              style={{ fontSize: 28, textAlign: "center", paddingBottom: 15 }}
-            >
-              🎁incoming!
-            </Text>
-          </>
-        )}
+        <Text style={{ fontSize: 28, textAlign: "center", paddingBottom: 15 }}>
+          🎁incoming!
+        </Text>
 
         {maybeImage && (
           <>
@@ -69,28 +54,7 @@ export default function Prize({
           </>
         )}
 
-        {/* {!maybeImage && maybeVideo && (
-          <>
-            <Video
-              ref={forwardedRef}
-              resizeMode="contain"
-              shouldPlay
-              source={{
-                uri: maybeVideo,
-              }}
-              style={{
-                alignSelf: "center",
-                flex: 1,
-                width: 300,
-                height: 300,
-              }}
-              usePoster
-              useNativeControls
-            />
-          </>
-        )} */}
-
-        {!isLoading && <ShareBtn />}
+        <ShareBtn />
       </View>
     </GestureRecognizer>
   );
@@ -106,14 +70,6 @@ function getImageUrlIfExists(aww) {
   }
 
   return null;
-}
-
-function getVideoUrlIfExists(aww) {
-  if (aww?.crosspost_parent_list?.length > 0) {
-    return aww.crosspost_parent_list[0].secure_media.reddit_video.fallback_url;
-  }
-
-  return aww.secure_media?.reddit_video?.fallback_url;
 }
 
 const styles = StyleSheet.create({

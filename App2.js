@@ -312,7 +312,7 @@ export default function App({ videoRef }) {
         >
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 36, paddingHorizontal: 12 }}>
-              {`( ∩ˇωˇ∩)♡\nかわいい\nタイマー`}
+              ( ∩ˇωˇ∩)♡
             </Text>
             {Object.keys(prizes).length > 0 && (
               <Text>{Object.keys(prizes).length} prizes waiting for you!</Text>

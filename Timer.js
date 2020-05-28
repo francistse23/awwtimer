@@ -55,37 +55,20 @@ export const TimerView = ({ reset, timer }) => {
     }`;
   };
 
-  const config = {
-    velocityThreshold: 0.3,
-    directionalOffsetThreshold: 80,
-  };
-
-  const handleSwipe = (gestureName) => {
-    const { SWIPE_RIGHT } = swipeDirections;
-
-    switch (gestureName) {
-      case SWIPE_RIGHT:
-        reset();
-    }
-  };
-
   return (
-    <GestureRecognizer
-      config={config}
-      onSwipe={(direction) => handleSwipe(direction)}
-      style={{ flex: 1 }}
+    <View
+      style={{
+        alignItems: "center",
+        justifyContent: "center",
+        flex: 5,
+        width: "100%",
+      }}
     >
-      <View
-        style={{
-          alignItems: "center",
-          justifyContent: "center",
-          flex: 5,
-          width: "100%",
-        }}
-      >
-        <Text style={{ fontSize: 40 }}>{formatTimeRemaining(timer)}</Text>
-      </View>
-    </GestureRecognizer>
+      <Text style={{ fontSize: 40 }}>{formatTimeRemaining(timer)}</Text>
+      <TouchableOpacity style={styles.button} onPress={() => reset()}>
+        <Text style={styles.buttonText}>Cancel</Text>
+      </TouchableOpacity>
+    </View>
   );
 };
 
