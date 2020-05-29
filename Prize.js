@@ -26,7 +26,7 @@ export default function Prize({
 
   const config = {
     velocityThreshold: 0.3,
-    directionalOffsetThreshold: 80,
+    directionalOffsetThreshold: 60,
   };
 
   const handleSwipe = (gestureName) => {

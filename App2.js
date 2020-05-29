@@ -361,8 +361,9 @@ export default function App({ videoRef }) {
                         } else {
                           console.log("retrieving data");
                           const { aww, cursor } = await getData(after);
-                          console.log(isVideo(aww));
+
                           if (isVideo(aww)) {
+                            console.log("aww is a video");
                             loadVideo(videoRef, aww);
                           }
                           setAww(aww);
@@ -669,12 +670,11 @@ async function loadVideo(videoRef, aww) {
         ? aww.crosspost_parent_list[0].secure_media.reddit_video.fallback_url
         : aww.post_hint.includes("rich:video")
         ? aww.secure_media_embed.media_domain_url
-        : aww.post_hint.includes("video")
+        : aww.post_hint.includes("hosted:video")
         ? // not all media has reddit video child
           aww.media?.reddit_video?.fallback_url
         : aww.url;
 
-    console.log("loading video", uri);
     const res = await videoRef.loadAsync(
       {
         uri,
@@ -713,5 +713,14 @@ async function handleClose(
 }
 
 function isVideo(aww) {
-  return aww.url.endsWith(".gifv") || !aww.post_hint.includes("rich:video");
+  console.log(
+    aww.url.endsWith(".gifv"),
+    aww.post_hint.includes("hosted:video"),
+    !aww.url.includes("gfycat")
+  );
+  return (
+    aww.url.endsWith(".gifv") ||
+    aww.post_hint.includes("hosted:video") ||
+    !aww.url.includes("gfycat")
+  );
 }
