@@ -181,6 +181,7 @@ export default function App({ videoRef }) {
 
     if (isVideo(prize)) {
       videoRef.presentFullscreenPlayer();
+      videoRef.playAsync();
     }
 
     return (
@@ -354,13 +355,13 @@ export default function App({ videoRef }) {
                       thunk: async () => {
                         if (Object.keys(prizes).length > 0) {
                           let aww = prizes[Object.keys(prizes)[0]];
-                          console.log("aww in thunk", aww);
                           if (isVideo(aww)) {
                             loadVideo(videoRef, aww);
                           }
                         } else {
                           console.log("retrieving data");
                           const { aww, cursor } = await getData(after);
+                          console.log(isVideo(aww));
                           if (isVideo(aww)) {
                             loadVideo(videoRef, aww);
                           }
@@ -547,6 +548,7 @@ async function getData(after) {
   const data = await response.json();
   const cursor = data.data.after;
   const [aww] = data?.data?.children?.map((c) => c.data) ?? [];
+  delete aww.all_awardings;
 
   // const posts = data?.data?.children?.map((c) => c.data) ?? [];
   // const randomIndex = Math.floor(Math.random() * posts.length);
@@ -665,6 +667,8 @@ async function loadVideo(videoRef, aww) {
     const uri =
       aww?.crosspost_parent_list?.length > 0
         ? aww.crosspost_parent_list[0].secure_media.reddit_video.fallback_url
+        : aww.post_hint.includes("rich:video")
+        ? aww.secure_media_embed.media_domain_url
         : aww.post_hint.includes("video")
         ? // not all media has reddit video child
           aww.media?.reddit_video?.fallback_url
@@ -680,7 +684,7 @@ async function loadVideo(videoRef, aww) {
 
     console.log("video loaded?", uri, res, aww);
   } catch (err) {
-    console.error(err);
+    console.error(err, aww);
   }
 }
 
@@ -709,9 +713,5 @@ async function handleClose(
 }
 
 function isVideo(aww) {
-  return (
-    aww.url.includes("gfy") ||
-    aww.url.endsWith(".gifv") ||
-    aww.post_hint.includes("video")
-  );
+  return aww.url.endsWith(".gifv") || !aww.post_hint.includes("rich:video");
 }

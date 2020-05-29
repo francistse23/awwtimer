@@ -73,6 +73,7 @@ export default function Prize({
           <TouchableOpacity
             onPress={() => {
               videoRef.presentFullscreenPlayer();
+              videoRef.playAsync();
             }}
           >
             <Image
@@ -85,9 +86,20 @@ export default function Prize({
                 height: Dimensions.get("window").height * 0.45,
               }}
             />
+            <Image
+              resizeMode="contain"
+              source={require("./assets/play.png")}
+              style={{
+                position: "absolute",
+                left: "30%",
+                top: "30%",
+                width: 100,
+                height: 100,
+              }}
+            />
           </TouchableOpacity>
         )}
-        <Text style={{ paddingHorizontal: 12 }}>{aww.title}</Text>
+        <Text style={{ padding: 12 }}>{aww.title}</Text>
 
         <NextBtn isPrize={isPrize} prizeId={aww.id} />
         <ShareBtn />
@@ -120,6 +132,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#ffb6b6",
     flex: 1,
-    // paddingVertical: 60,
+    paddingVertical: 60,
+  },
+  overlay: {
+    backgroundColor: "rgba(255,85,117,0.95)",
   },
 });
