@@ -17,7 +17,6 @@ export default function App() {
         ref={(theRef) => setVideoRef(theRef)}
         resizeMode="contain"
         style={{ flex: 1, display: "none" }}
-        useNativeControls
       />
       <App2 videoRef={videoRef} />
     </>
