@@ -361,10 +361,14 @@ export default function App({ videoRef }) {
                           }
                         } else {
                           console.log("retrieving data");
-                          const { aww, cursor } = await getData(after);
+                          let { aww, cursor } = await getData(after);
+
+                          if (aww?.crosspost_parent_list?.length > 0) {
+                            console.log("CROSSPOST");
+                            aww = aww.crosspost_parent_list[0];
+                          }
 
                           if (isVideo(aww)) {
-                            console.log("aww is a video");
                             loadVideo(videoRef, aww);
                           }
                           setAww(aww);
@@ -457,7 +461,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#ffb6b6",
     flex: 1,
-    paddingVertical: 60,
+    paddingVertical: 80,
   },
   input: {
     borderColor: "black",
@@ -666,15 +670,16 @@ async function loadVideo(videoRef, aww) {
   try {
     await videoRef.unloadAsync();
 
-    const uri =
-      aww?.crosspost_parent_list?.length > 0
-        ? aww.crosspost_parent_list[0].secure_media.reddit_video.fallback_url
-        : aww.post_hint.includes("rich:video")
-        ? aww.secure_media_embed.media_domain_url
-        : aww.post_hint.includes("hosted:video")
-        ? // not all media has reddit video child
-          aww.media?.reddit_video?.fallback_url
-        : aww.url;
+    let uri;
+    if (aww?.secure_media?.reddit_video?.fallback_url) {
+      uri = aww.secure_media.reddit_video.fallback_url;
+    } else if (aww.post_hint.includes("rich:video")) {
+      uri = aww.secure_media_embed.media_domain_url;
+    } else if (aww.post_hint.includes("hosted:video")) {
+      uri = aww.media?.reddit_video?.fallback_url;
+    } else {
+      uri = aww.url;
+    }
 
     const res = await videoRef.loadAsync(
       {
@@ -714,14 +719,22 @@ async function handleClose(
 }
 
 function isVideo(aww) {
-  console.log(
-    aww.url.endsWith(".gifv"),
-    aww.post_hint.includes("hosted:video"),
-    !aww.url.includes("gfycat")
-  );
+  console.log(aww.url, aww.post_hint);
+
+  if (
+    aww.url.includes("gfycat") ||
+    aww.url.endsWith(".jpg") ||
+    aww.url.endsWith(".png") ||
+    aww.post_hint.includes("image") ||
+    aww.url.endsWith("gifv")
+  ) {
+    return false;
+  }
+
   return (
-    aww.url.endsWith(".gifv") ||
     aww.post_hint.includes("hosted:video") ||
-    !aww.url.includes("gfycat")
+    aww.post_hint.includes("rich:video") ||
+    aww?.reddit_video_preview?.fallback_url ||
+    aww.secure_media_embed.media_domain_url
   );
 }
