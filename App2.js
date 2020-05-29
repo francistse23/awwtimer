@@ -197,23 +197,24 @@ export default function App({ videoRef }) {
         // is now routing user to sign up
         // but how can we handle after the sign up since it takes them
         // back to the choose time view?
-        ShareBtn={() =>
-          currentUser ? (
-            <TouchableOpacity
-              onPress={() => dispatch({ type: ACTION_TYPES.SHARE_PRIZE })}
-              style={styles.button}
-            >
-              <Text
-                style={{
-                  color: "white",
-                  fontSize: 18,
-                  textAlign: "center",
-                }}
+        ShareBtn={() => (
+          <>
+            {currentUser && (
+              <TouchableOpacity
+                onPress={() => dispatch({ type: ACTION_TYPES.SHARE_PRIZE })}
+                style={styles.button}
               >
-                {`Share\n( because you care ʕ๑•ᴥ•ʔ )`}
-              </Text>
-            </TouchableOpacity>
-          ) : (
+                <Text
+                  style={{
+                    color: "white",
+                    fontSize: 18,
+                    textAlign: "center",
+                  }}
+                >
+                  {`Share\n( because you care ʕ๑•ᴥ•ʔ )`}
+                </Text>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
               onPress={() => dispatch({ type: ACTION_TYPES.RESET })}
               style={styles.button}
@@ -225,11 +226,11 @@ export default function App({ videoRef }) {
                   textAlign: "center",
                 }}
               >
-                Good job!
+                Good job! New timer!
               </Text>
             </TouchableOpacity>
-          )
-        }
+          </>
+        )}
         NextBtn={({ isPrize, prizeId }) =>
           currentUser &&
           Object.keys(prizes).length > 1 && (
