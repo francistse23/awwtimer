@@ -131,12 +131,6 @@ export default function FriendsList({
     <>
       {isViewing && (
         <View>
-          {currentUser && (
-            <Text
-              style={styles.altText}
-            >{`Connect with friends as ${currentUser}`}</Text>
-          )}
-
           <View style={styles.horizontalContainer}>
             <TextInput
               onChangeText={(text) => setFriendName(text)}
@@ -167,23 +161,31 @@ export default function FriendsList({
               {addSuccess}
             </Text>
           )}
+
+          {currentUser && (
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: "bold",
+                paddingLeft: 25,
+                color: "#333",
+                marginTop: 10,
+              }}
+            >{`Connect with friends as ${currentUser}`}</Text>
+          )}
         </View>
       )}
 
       <FlatList
         contentContainerStyle={{
-          alignItems: "center",
-          flex: 1,
-          justifyContent: "space-around",
-          // paddingVertical: isViewing ? 48 : 16,
           width: Dimensions.get("window").width,
+          marginTop: 20,
         }}
         data={friends}
         keyExtractor={(item) => item}
         ListEmptyComponent={() => (
           <Text>
-            {error && "Sry, we suck and can't find your friends"}
-            {!error && "find some friends"}
+            {error && "🙈, our code is 💩 and we can't find friends right now"}
           </Text>
         )}
         ListFooterComponent={() =>
@@ -210,25 +212,44 @@ export default function FriendsList({
           )
         }
         ListHeaderComponent={
-          <Text style={{ fontSize: 24, textAlign: "center" }}>
-            Your friends 😀
+          <Text
+            style={{
+              fontSize: 22,
+              paddingLeft: 25,
+              fontWeight: "bold",
+              marginBottom: 10,
+              marginTop: 20,
+              color: "#333",
+            }}
+          >
+            Your Friends
           </Text>
         }
         numOfColumns={2}
         refreshControl={isViewing ? refreshControl : null}
         renderItem={({ item }) => {
           return isViewing ? (
-            <View style={styles.button}>
-              <Text style={styles.buttonText}>{item}</Text>
-            </View>
+            <Text
+              style={{
+                fontSize: 18,
+                paddingLeft: 25,
+                paddingBottom: 6,
+                paddingTop: 4,
+                color: "#3b5959",
+              }}
+            >
+              {item}
+            </Text>
           ) : (
             <TouchableOpacity
               onPress={() => addFriendToShare(item)}
-              style={
-                selectedFriends.includes(item) || isViewing
-                  ? styles.button
-                  : { ...styles.button, backgroundColor: "lightgray" }
-              }
+              style={{
+                ...styles.button,
+                marginBottom: 20,
+                backgroundColor: selectedFriends.includes(item)
+                  ? "#679b9b"
+                  : "lightgray",
+              }}
             >
               <Text style={styles.buttonText}>{item}</Text>
             </TouchableOpacity>
@@ -240,12 +261,6 @@ export default function FriendsList({
 }
 
 const styles = StyleSheet.create({
-  altText: {
-    color: "black",
-    fontWeight: "600",
-    marginVertical: 12,
-    textAlign: "center",
-  },
   button: {
     backgroundColor: "#679b9b",
     borderRadius: 10,
@@ -265,10 +280,9 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   horizontalContainer: {
-    alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
-    margin: 12,
+    marginHorizontal: 12,
   },
   input: {
     backgroundColor: "transparent",
@@ -280,5 +294,8 @@ const styles = StyleSheet.create({
     height: 50,
     marginHorizontal: 12,
     padding: 6,
+  },
+  friend: {
+    fontSize: 22,
   },
 });
