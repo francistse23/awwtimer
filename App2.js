@@ -341,44 +341,36 @@ export default function App({ videoRef }) {
             }}
           >
             {currentViewState === VIEW_STATES.INITIAL && (
-              <View
-                style={{
-                  flex: 1,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <ChooseTime
-                  startTimer={(time) =>
-                    dispatch({
-                      type: ACTION_TYPES.START_TIME,
-                      durationInSeconds: time,
-                      thunk: async () => {
-                        if (Object.keys(prizes).length > 0) {
-                          let aww = prizes[Object.keys(prizes)[0]];
-                          if (isVideo(aww)) {
-                            loadVideo(videoRef, aww);
-                          }
-                        } else {
-                          console.log("retrieving data");
-                          let { aww, cursor } = await getData(after);
-
-                          if (aww?.crosspost_parent_list?.length > 0) {
-                            console.log("CROSSPOST");
-                            aww = aww.crosspost_parent_list[0];
-                          }
-
-                          if (isVideo(aww)) {
-                            loadVideo(videoRef, aww);
-                          }
-                          setAww(aww);
-                          setAfter(cursor);
+              <ChooseTime
+                startTimer={(time) =>
+                  dispatch({
+                    type: ACTION_TYPES.START_TIME,
+                    durationInSeconds: time,
+                    thunk: async () => {
+                      if (Object.keys(prizes).length > 0) {
+                        let aww = prizes[Object.keys(prizes)[0]];
+                        if (isVideo(aww)) {
+                          loadVideo(videoRef, aww);
                         }
-                      },
-                    })
-                  }
-                />
-              </View>
+                      } else {
+                        console.log("retrieving data");
+                        let { aww, cursor } = await getData(after);
+
+                        if (aww?.crosspost_parent_list?.length > 0) {
+                          console.log("CROSSPOST");
+                          aww = aww.crosspost_parent_list[0];
+                        }
+
+                        if (isVideo(aww)) {
+                          loadVideo(videoRef, aww);
+                        }
+                        setAww(aww);
+                        setAfter(cursor);
+                      }
+                    },
+                  })
+                }
+              />
             )}
           </View>
         </ScrollView>
