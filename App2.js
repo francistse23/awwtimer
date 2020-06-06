@@ -420,6 +420,7 @@ export default function App({ videoRef }) {
           ) : (
             <View style={styles.signUpContainer}>
               <Text style={{ fontSize: 36 }}>Create a user 🤗</Text>
+              <Text style={{ fontSize: 18 }}>share 🎁 with friends</Text>
               <SignUpForm
                 onUserCreated={(username) => {
                   setCurrentUser(username);
