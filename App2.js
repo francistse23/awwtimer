@@ -400,7 +400,7 @@ export default function App({ videoRef }) {
                   />
                 }
               />
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 onPress={() => {
                   console.log("deleting user");
                   const secureStoreOptions = {
@@ -415,7 +415,7 @@ export default function App({ videoRef }) {
                 style={styles.button}
               >
                 <Text style={styles.buttonText}>Reset User</Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </>
           ) : (
             <View style={styles.signUpContainer}>
