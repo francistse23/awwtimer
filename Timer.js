@@ -5,7 +5,7 @@ import { Text, TouchableOpacity, View, StyleSheet } from "react-native";
 export const ChooseTime = ({ startTimer }) => (
   <View>
     <TouchableOpacity
-      onPress={() => startTimer(15 * 60)}
+      onPress={() => startTimer(20 * 60)}
       style={[
         styles.button,
         {
@@ -13,11 +13,11 @@ export const ChooseTime = ({ startTimer }) => (
         },
       ]}
     >
-      <Text style={styles.buttonText}>15 minutes</Text>
+      <Text style={styles.buttonText}>20 minutes</Text>
     </TouchableOpacity>
 
     <TouchableOpacity
-      onPress={() => startTimer(20 * 60)}
+      onPress={() => startTimer(25 * 60)}
       style={[
         styles.button,
         {
@@ -25,7 +25,7 @@ export const ChooseTime = ({ startTimer }) => (
         },
       ]}
     >
-      <Text style={styles.buttonText}>20 minutes</Text>
+      <Text style={styles.buttonText}>25 minutes</Text>
     </TouchableOpacity>
 
     <TouchableOpacity
