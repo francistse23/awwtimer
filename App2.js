@@ -48,6 +48,9 @@ const appNamespace = "awwtimer-";
 function reducer(state, action) {
   switch (action.type) {
     case ACTION_TYPES.RESET:
+      // clear all existing notifications before we schedule one
+      Notifications.cancelAllScheduledNotificationsAsync();
+
       return initialState;
     case ACTION_TYPES.START_TIME:
       /*
