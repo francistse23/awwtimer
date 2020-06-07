@@ -17,6 +17,7 @@ import FriendsList from "./FriendsList";
 import { Notifications } from "expo";
 import * as Permissions from "expo-permissions";
 import { TimerView, ChooseTime } from "./Timer";
+import { activateKeepAwake, deactivateKeepAwake } from "expo-keep-awake";
 
 export const ACTION_TYPES = {
   RESET: "RESET",
@@ -48,11 +49,15 @@ const appNamespace = "awwtimer-";
 function reducer(state, action) {
   switch (action.type) {
     case ACTION_TYPES.RESET:
+      deactivateKeepAwake();
+
       // clear all existing notifications before we schedule one
       Notifications.cancelAllScheduledNotificationsAsync();
 
       return initialState;
     case ACTION_TYPES.START_TIME:
+      activateKeepAwake();
+
       /*
        * need to handle two cases.
        * 1. User leaves the app open
@@ -88,6 +93,8 @@ function reducer(state, action) {
         timer: Math.ceil((state.timerEndDate - new Date().getTime()) / 1000),
       };
     case ACTION_TYPES.TIMER_DONE:
+      deactivateKeepAwake();
+
       return {
         ...state,
         timerEndDate: null,
