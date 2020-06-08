@@ -48,8 +48,7 @@ export default function FriendsList({
       setAddError(null);
       setAddSuccess(null);
 
-      let [name, code] = friendName.split("#");
-      name = name.toLowerCase();
+      const [name, code] = friendName.split("#");
 
       if (friends.includes(name)) {
         setAddError(`already added ${name} as a friend`);
