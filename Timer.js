@@ -1,6 +1,5 @@
 import React from "react";
 import { Text, TouchableOpacity, View, StyleSheet } from "react-native";
-import { useKeepAwake } from "expo-keep-awake";
 
 // https://reactnative.dev/docs/transforms
 export const ChooseTime = ({ startTimer }) => (
